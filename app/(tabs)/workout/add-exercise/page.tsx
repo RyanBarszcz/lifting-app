@@ -6,32 +6,6 @@ import { Search } from "lucide-react";
 import { useWorkout } from "@/context/WorkoutContext";
 import { DBExercise } from "@/types";
 
-// TODO: Replace with GET /exercises
-const ALL_EXERCISES = [
-    "Bench Press",
-    "Incline Dumbbell Press",
-    "Seated Shoulder Press",
-    "Chest Fly",
-    "Lateral Raise",
-    "Tricep Pushdown",
-    "Overhead Extension",
-    "Lat Pulldown",
-    "Seated Row",
-    "Back Extension",
-    "Rear Delt Fly",
-    "Preacher Curl",
-    "Hammer Curl",
-    "Incline Curl",
-    "Hack Squat",
-    "Seated Leg Curl",
-    "Calf Raise",
-    "Glute Kickback",
-    "Hip Adduction",
-    "Hip Abduction",
-    "Cable Crunch",
-    "Oblique Twist",
-];
-
 // interface Exercise {
 //     id: string,
 //     name: string,
@@ -66,16 +40,12 @@ export default function AddExercisePage() {
 
 
     const filteredExercises = useMemo(() => {
-        const sorted = [...ALL_EXERCISES].sort((a, b) =>
-            a.localeCompare(b)
-        );
-
-        if (!search) return sorted;
-
-        return sorted.filter((ex) =>
-            ex.toLowerCase().includes(search.toLowerCase())
-        );
-    }, [search]);
+        return exercises
+            .filter((ex) =>
+                ex.name.toLowerCase().includes(search.toLowerCase())
+            )
+            .sort((a, b) => a.name.localeCompare(b.name));
+    }, [search, exercises]);
 
     const toggleExercise = (exercise: DBExercise) => {
         setSelected((prev) =>
@@ -121,26 +91,22 @@ export default function AddExercisePage() {
             {/* Exercise List */}
             <div className="flex-1 overflow-y-auto px-6 py-4 space-y-2 pb-32">
 
-                {exercises
-                    .filter((ex) =>
-                        ex.name.toLowerCase().includes(search.toLowerCase())
-                    )
-                    .map((exercise) => {
-                        const isSelected = selected.some(e => e.id === exercise.id);
+                {filteredExercises.map((exercise) => {
+                    const isSelected = selected.some(e => e.id === exercise.id);
 
-                        return (
-                            <button
-                                key={exercise.id}
-                                onClick={() => toggleExercise(exercise)}
-                                className={`w-full text-left px-4 py-3 rounded-xl transition-colors ${isSelected
-                                    ? "bg-blue-500 text-white"
-                                    : "bg-[#1a1a1a] hover:bg-[#262626]"
-                                    }`}
-                            >
-                                {exercise.name}
-                            </button>
-                        );
-                    })}
+                    return (
+                        <button
+                            key={exercise.id}
+                            onClick={() => toggleExercise(exercise)}
+                            className={`w-full text-left px-4 py-3 rounded-xl transition-colors ${isSelected
+                                ? "bg-blue-500 text-white"
+                                : "bg-[#1a1a1a] hover:bg-[#262626]"
+                                }`}
+                        >
+                            {exercise.name}
+                        </button>
+                    );
+                })}
 
             </div>
 
