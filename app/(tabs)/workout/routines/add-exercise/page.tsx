@@ -4,6 +4,7 @@ import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Search } from "lucide-react";
 import { useRoutine } from "@/context/RoutineContext";
+import { DBExercise } from "@/types";
 
 // TODO: Replace with GET /exercises
 const ALL_EXERCISES = [
@@ -31,20 +32,20 @@ const ALL_EXERCISES = [
     "Oblique Twist",
 ];
 
-interface Exercise {
-    id: string,
-    name: string,
-    muscleGroup?: string,
-    category?: string,
-}
+// interface Exercise {
+//     id: string,
+//     name: string,
+//     muscleGroup?: string,
+//     category?: string,
+// }
 
 export default function AddExercisePage() {
     const router = useRouter();
     const { addExercises } = useRoutine();
 
     const [search, setSearch] = useState("");
-    const [selected, setSelected] = useState<Exercise[]>([]);
-    const [exercises, setExercises] = useState<Exercise[]>([]);
+    const [selected, setSelected] = useState<DBExercise[]>([]);
+    const [exercises, setExercises] = useState<DBExercise[]>([]);
 
     // Get exercises from DB
     useEffect(() => {
@@ -76,7 +77,7 @@ export default function AddExercisePage() {
         );
     }, [search]);
 
-    const toggleExercise = (exercise: Exercise) => {
+    const toggleExercise = (exercise: DBExercise) => {
         setSelected((prev) =>
             prev.some((e) => e.id === exercise.id)
                 ? prev.filter((e) => e.id !== exercise.id)
