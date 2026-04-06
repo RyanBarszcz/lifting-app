@@ -1,14 +1,15 @@
 "use client";
 
 import { useAuth, useUser } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-
 
 
 export default function ProfilePage() {
     const [data, setData] = useState<any>(null);
     const { getToken } = useAuth();
     const { user } = useUser();
+    const router = useRouter();
 
     useEffect(() => {
         const fetchProfileData = async () => {
@@ -137,9 +138,10 @@ export default function ProfilePage() {
                 </div>
 
                 {/* Action Buttons */}
-                {/* TODO: Add basic exercises page */}
                 <div className="space-y-3">
-                    <button className="w-full bg-[#1a1a1a] border border-[#262626] py-3 rounded-xl hover:bg-[#222] transition">
+                    <button
+                        onClick={() => router.push("profile/exercises")}
+                        className="w-full bg-[#1a1a1a] border border-[#262626] py-3 rounded-xl hover:bg-[#222] transition">
                         Exercises
                     </button>
                 </div>
