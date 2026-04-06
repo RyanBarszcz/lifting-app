@@ -1,7 +1,5 @@
 "use client";
 
-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
-
 import { createContext, useContext, useState } from "react";
 import { RoutineState, RoutineExercise, RoutineSet, DBExercise } from "@/types";
 
