@@ -6,22 +6,15 @@ import { useRouter } from "next/navigation";
 import { useWorkout } from "@/context/WorkoutContext";
 import ExerciseCard from "@/components/ExerciseCard";
 import { useAuth } from "@clerk/nextjs";
-import { PreviousSet } from "@/types";
+import { PreviousSet, WorkoutSet } from "@/types";
 
-// TODO: Make sure title takes the template title or is changeable at the end
-// TODO: After finish workout go to confirm page with title and end notes.
 
 // Local Type
 interface UIExercise {
     id: string;
     exerciseId: string;
-    title: string;
-    sets: {
-        id: string;
-        weight: number;
-        reps: number;
-        completed: boolean;
-    }[];
+    name: string;
+    sets: WorkoutSet[];
 }
 
 export default function ActiveWorkoutPage() {
@@ -52,65 +45,6 @@ export default function ActiveWorkoutPage() {
         exercise.sets.some(set => !set.completed)
     );
 
-    const handleFinishWorkout = async () => {
-        try {
-            console.log("Exercises before saving workout: ", exercises);
-
-            const cleanedExercises = exercises
-                .map(exercise => ({
-                    exerciseId: exercise.exerciseId,
-                    sets: exercise.sets
-                        .filter(set => set.completed && set.weight > 0 && set.reps > 0)
-                        .map((set, index) => ({
-                            setNumber: index + 1,
-                            weight: set.weight,
-                            reps: set.reps,
-                        }))
-                }))
-                .filter(ex => ex.sets.length > 0);
-
-            console.log("Finished Exercises: ", cleanedExercises);
-
-            if (cleanedExercises.length === 0) {
-                alert("No completed sets to save.");
-                return;
-            }
-
-            const token = await getToken();
-
-            const res = await fetch(
-                `${process.env.NEXT_PUBLIC_API_URL}/sessions/${workout.sessionId}/complete`,
-                {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${token}`,
-                    },
-                    body: JSON.stringify({
-                        exercises: cleanedExercises,
-                        endNote: null,
-                    }),
-                }
-            );
-
-            if (!res.ok) {
-                const err = await res.json();
-                throw new Error(err.error || "Failed to complete workout");
-            }
-
-            const data = await res.json();
-            console.log("Workout saved:", data);
-
-            resetWorkout();
-            router.push("/workout");
-
-        } catch (error) {
-            console.error(error);
-            alert("Failed to save workout.");
-        }
-    };
-
-
     const updateExerciseSets = (exerciseId: string, newSets: UIExercise["sets"]) => {
         setExercises(prev =>
             prev.map(ex =>
@@ -133,7 +67,7 @@ export default function ActiveWorkoutPage() {
         const formatted: UIExercise[] = workoutExercises.map((e) => ({
             id: e.id,
             exerciseId: e.exerciseId,
-            title: e.name,
+            name: e.name,
             sets: e.sets.map((set) => ({
                 id: crypto.randomUUID(),
                 weight: set.weight ?? 0,
@@ -244,7 +178,7 @@ export default function ActiveWorkoutPage() {
                             if (hasIncompleteSets) {
                                 setShowFinishModal(true);
                             } else {
-                                handleFinishWorkout();
+                                router.push(`/workout/save?sessionId=${workout.sessionId}`);
                             }
                         }}
                         className="bg-blue-500 rounded-lg py-2 px-4 text-white font-semibold">
@@ -338,7 +272,7 @@ export default function ActiveWorkoutPage() {
                             <button
                                 onClick={() => {
                                     setShowFinishModal(false);
-                                    handleFinishWorkout();
+                                    router.push(`/workout/save?sessionId=${workout.sessionId}`);
                                 }}
                                 className="flex-1 bg-blue-500 py-2 rounded-lg"
                             >

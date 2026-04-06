@@ -50,6 +50,7 @@ export interface APIRoutine {
 
 // WORKOUT (ACTIVE SESSION) -------------------
 export interface WorkoutSet {
+    id?: string;
     setNumber: number;
     reps: number;
     weight: number | null;
