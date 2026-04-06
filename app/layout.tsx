@@ -6,6 +6,7 @@ export const metadata = {
   title: "Workout App",
   description: "Performance tracking application",
 };
+import { Toaster } from "sonner";
 
 export default function RootLayout({
   children,
@@ -19,6 +20,7 @@ export default function RootLayout({
           <RoutineProvider>
             <WorkoutProvider>
               {children}
+              <Toaster theme="dark" />
             </WorkoutProvider>
           </RoutineProvider>
         </ClerkProvider>

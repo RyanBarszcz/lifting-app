@@ -3,8 +3,8 @@
 import { useRouter } from "next/navigation";
 import RoutineExerciseCard from "@/components/RoutineExerciseCard";
 import { useRoutine } from "@/context/RoutineContext";
-import { getToken, useAuth } from "@clerk/nextjs";
-import { log } from "console";
+import { useAuth } from "@clerk/nextjs";
+import { toast } from "sonner";
 
 export default function CreateRoutinePage() {
     const router = useRouter();
@@ -18,17 +18,17 @@ export default function CreateRoutinePage() {
         resetRoutine,
     } = useRoutine();
 
-    // TODO: Add toast for why it didn't save or it did save
+    // TODO: Possibly add a loading spinner on the save button
     const handleSaveRoutine = async () => {
         try {
             // Validation
             if (!routine.title.trim()) {
-                alert("Please enter a routine title");
+                toast.error("Please enter a routine title");
                 return;
             }
 
             if (routine.exercises.length === 0) {
-                alert("Add at least one exercise");
+                toast.error("Add at least one exercise");
                 return;
             }
 
@@ -70,9 +70,12 @@ export default function CreateRoutinePage() {
             resetRoutine();
             router.push("/workout");
             console.log("Routine saved:", payload);
+            toast.success("Routine saved!", {
+                description: "Ready to use in your workouts",
+            });
         } catch (err) {
             console.error(err);
-            alert("Failed to save routine");
+            toast.error("Failed to save routine");
         }
     };
 
