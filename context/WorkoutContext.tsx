@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useEffect } from "react";
 import { DBExercise, WorkoutExercise, WorkoutState, StartExercise } from "@/types";
+import { useAuth } from "@clerk/nextjs";
 
 // interface WorkoutSet {
 //     setNumber: number;
@@ -40,9 +41,9 @@ interface WorkoutContextType {
     addExercises: (newExercises: DBExercise[]) => void;
     resetWorkout: () => void;
     startWorkoutWithExercises: (
-        sessionId: string,
+        sessionId: string | null,
         exercises: StartExercise[]
-    ) => void;
+    ) => Promise<void>;
     reorderExercises: (newOrder: WorkoutExercise[]) => void;
     deleteExercise: (id: string) => void;
 }
@@ -55,6 +56,7 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
         startedAt: null,
         exercises: [],
     });
+    const { getToken } = useAuth();
 
     // Load from localStorage on mount
     useEffect(() => {
@@ -124,8 +126,29 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
         });
     };
 
-    const startWorkoutWithExercises = (
-        sessionId: string,
+    const ensureSession = async () => {
+        const token = await getToken();
+
+        const res = await fetch(
+            `${process.env.NEXT_PUBLIC_API_URL}/sessions/start`,
+            {
+                method: "POST",
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            }
+        );
+
+        if (!res.ok) {
+            throw new Error("Failed to create session");
+        }
+
+        const data = await res.json();
+        return data.id;
+    };
+
+    const startWorkoutWithExercises = async (
+        sessionId: string | null,
         exercises: StartExercise[]
     ) => {
         const builtExercises: WorkoutExercise[] = exercises.map((ex) => ({
@@ -135,20 +158,22 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
             sets: ex.sets.map((set) => ({
                 setNumber: set.setNumber,
                 reps: set.reps,
-                weight: null,
+                weight: set.weight ?? null,
                 completed: false,
             })),
         }));
 
+        const finalSessionId = sessionId ?? await ensureSession();
+
+
         setWorkout({
-            sessionId,
+            sessionId: finalSessionId,
             startedAt: Date.now(),
             exercises: builtExercises,
         });
 
         console.log("Routine built exercises:", builtExercises);
     };
-
 
 
     const reorderExercises = (newOrder: WorkoutExercise[]) => {

@@ -2,7 +2,10 @@
 
 import { Award, MoreHorizontal } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { WorkoutSummary } from '@/types';
+import { WorkoutDetail, WorkoutExercise, WorkoutSummary } from '@/types';
+import { useState } from 'react';
+import { useWorkout } from '@/context/WorkoutContext';
+import { useAuth } from '@clerk/nextjs';
 
 // interface Workout {
 //     id: string;
@@ -19,9 +22,54 @@ import { WorkoutSummary } from '@/types';
 
 export default function WorkoutCard({ workout }: { workout: WorkoutSummary }) {
     const router = useRouter();
+    const [showMenu, setShowMenu] = useState(false);
+    const { startWorkoutWithExercises } = useWorkout();
+    const { getToken } = useAuth();
 
     const visibleExercises = workout.exercises.slice(0, 3);
     const remaining = workout.exercises.length - 3;
+
+    const handleCopyWorkout = async () => {
+        try {
+            const token = await getToken();
+
+            // Fetch FULL workout (not summary)
+            const res = await fetch(
+                `${process.env.NEXT_PUBLIC_API_URL}/workout/${workout.id}`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+
+            const fullWorkout: WorkoutDetail = await res.json();
+            console.log("Full: ", fullWorkout);
+
+            // Build exercises with REAL sets
+            const exercises: WorkoutExercise[] = fullWorkout.exercises.map((ex) => ({
+                id: crypto.randomUUID(), // UI id
+                exerciseId: ex.exerciseId,
+                name: ex.name,
+                sets: ex.sets.map((set) => ({
+                    id: crypto.randomUUID(),
+                    setNumber: set.setNumber,
+                    reps: set.reps,
+                    weight: set.weight,
+                    completed: false, // UI-only
+                })),
+            }));
+
+            // Start workout (session auto-created in context)
+            await startWorkoutWithExercises(null, exercises);
+
+            router.push("/workout/active");
+
+        } catch (err) {
+            console.error(err);
+            alert("Failed to copy workout");
+        }
+    };
 
 
     return (
@@ -39,9 +87,42 @@ export default function WorkoutCard({ workout }: { workout: WorkoutSummary }) {
 
 
                     {/* TODO: Make it open options for workout */}
-                    <button className="text-white hover:text-white transition-colors">
+                    {/* Save as Routine, Copy Workout, Delete Workout */}
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setShowMenu((prev) => !prev);
+                        }}
+                        className="text-white hover:text-white transition-colors">
                         <MoreHorizontal size={20} />
                     </button>
+                    {showMenu && (
+                        <div
+                            onClick={(e) => e.stopPropagation()}
+                            className="absolute right-5 mt-2 bg-[#1a1a1a] border border-[#262626] rounded-lg shadow-lg z-20 w-48"
+                        >
+                            <button
+                                onClick={() => handleCopyWorkout()}
+                                className="w-full text-left px-4 py-2 hover:bg-[#262626]"
+                            >
+                                Copy Workout
+                            </button>
+
+                            <button
+                                onClick={() => console.log("Save as routine")}
+                                className="w-full text-left px-4 py-2 hover:bg-[#262626]"
+                            >
+                                Save as Routine
+                            </button>
+
+                            <button
+                                onClick={() => console.log("Delete workout")}
+                                className="w-full text-left px-4 py-2 hover:bg-[#262626] text-red-500"
+                            >
+                                Delete Workout
+                            </button>
+                        </div>
+                    )}
                 </div>
 
                 <p className="text-sm text-gray-500 mt-1">{workout.completedAt}</p>

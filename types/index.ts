@@ -78,6 +78,7 @@ export interface StartExercise {
     name: string;
     sets: {
         setNumber: number;
+        weight?: number | null;
         reps: number;
     }[];
 }
@@ -117,7 +118,23 @@ export interface WorkoutSummary {
     records: number;
     totalVolume: number;
     exercises: {
+        exerciseId: string;
         name: string;
         sets: number;
+    }[];
+}
+
+// COPY
+export interface WorkoutDetail {
+    id: string;
+    title: string;
+    exercises: {
+        exerciseId: string;
+        name: string;
+        sets: {
+            setNumber: number;
+            reps: number;
+            weight: number;
+        }[];
     }[];
 }
