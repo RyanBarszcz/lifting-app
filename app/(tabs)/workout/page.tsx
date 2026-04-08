@@ -14,6 +14,8 @@ export default function WorkoutPage() {
     const { getToken } = useAuth();
     const [routines, setRoutines] = useState<Routine[]>([]);
 
+    // TODO: SET Routines to cache
+    // TODO: Add skeleton for routine cards
     useEffect(() => {
         const fetchRoutines = async () => {
             try {

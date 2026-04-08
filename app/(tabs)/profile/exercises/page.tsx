@@ -4,24 +4,39 @@ import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Search } from "lucide-react";
 import { DBExercise } from "@/types";
+import { getCache, setCache } from "@/lib/cache";
 
 export default function ExercisesPage() {
     const router = useRouter();
 
     const [search, setSearch] = useState("");
-    const [exercises, setExercises] = useState<DBExercise[]>([]);
+    const [exercises, setExercises] = useState<DBExercise[]>(() => {
+        if (typeof window !== "undefined") {
+            return getCache("exercises") || [];
+        }
+        return [];
+    });
+    const [loading, setLoading] = useState(true);
 
     // Fetch exercises
     useEffect(() => {
         const fetchExercises = async () => {
+            if (exercises.length > 0) {
+                setLoading(false);
+                return;
+            }
+
             try {
                 const res = await fetch(
                     `${process.env.NEXT_PUBLIC_API_URL}/exercises`
                 );
                 const data = await res.json();
                 setExercises(data);
+                setCache("exercises", data);
             } catch (err) {
                 console.error("Failed to fetch exercises", err);
+            } finally {
+                setLoading(false);
             }
         };
 
@@ -72,15 +87,24 @@ export default function ExercisesPage() {
             {/* Exercise List */}
             <div className="flex-1 overflow-y-auto px-6 py-4 space-y-2">
 
-                {filteredExercises.map((exercise) => (
-                    <div
-                        key={exercise.id}
-                        className="w-full text-left px-4 py-3 rounded-xl bg-[#1a1a1a] hover:bg-[#262626] transition-colors"
-                    >
-                        {exercise.name}
-                    </div>
-                ))}
-
+                {loading ? (
+                    <p className="text-gray-500 text-sm text-center mt-10 animate-pulse">
+                        Loading exercises...
+                    </p>
+                ) : filteredExercises.length === 0 ? (
+                    <p className="text-gray-500 text-sm text-center mt-10">
+                        No exercises found
+                    </p>
+                ) : (
+                    filteredExercises.map((exercise) => (
+                        <div
+                            key={exercise.id}
+                            className="w-full text-left px-4 py-3 rounded-xl bg-[#1a1a1a] hover:bg-[#262626] transition-colors"
+                        >
+                            {exercise.name}
+                        </div>
+                    ))
+                )}
             </div>
         </div>
     );

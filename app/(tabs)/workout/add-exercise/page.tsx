@@ -6,7 +6,7 @@ import { Search } from "lucide-react";
 import { useWorkout } from "@/context/WorkoutContext";
 import { DBExercise } from "@/types";
 
-
+// TODO: Set exercises to cache, check if there
 export default function AddExercisePage() {
     const router = useRouter();
     const { addExercises } = useWorkout();

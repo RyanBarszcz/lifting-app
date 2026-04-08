@@ -38,6 +38,8 @@ export default function TabsLayout({
         );
     };
 
+    // TODO: Save to localdata (sessions, templates, profile, exercises) if no change, to lessen network pulls. exercises should only be pulled after sign in and then tracked.
+    // TODO: Add sign out button
     return (
         <div className="min-h-screen flex flex-col bg-black">
 

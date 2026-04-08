@@ -11,6 +11,9 @@ export default function ProfilePage() {
     const { user } = useUser();
     const router = useRouter();
 
+    // TODO: Set profile data to cache
+    // TODO: Add blue sign out button to top right
+    // TODO: Add skeleton for stats
     useEffect(() => {
         const fetchProfileData = async () => {
             const token = await getToken();
@@ -63,7 +66,7 @@ export default function ProfilePage() {
                 <div className="space-y-4">
                     <h2 className="text-lg font-semibold">Statistics</h2>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-3 gap-2">
 
                         <StatCard
                             label="Total Volume"
@@ -80,10 +83,10 @@ export default function ProfilePage() {
                             value={data.totalReps.toLocaleString()}
                         />
 
-                        <StatCard
+                        {/* <StatCard
                             label="Top Muscle"
                             value={data.topMuscle || "—"}
-                        />
+                        /> */}
 
                     </div>
                 </div>
@@ -107,38 +110,9 @@ export default function ProfilePage() {
                     </div>
                 </div>
 
-                {/*  Recent Workouts */}
-                <div className="space-y-4">
-                    <h2 className="text-lg font-semibold">Recent Workouts</h2>
-
-                    {data.recentWorkouts.length === 0 && (
-                        <p className="text-gray-500 text-sm">
-                            No workouts yet
-                        </p>
-                    )}
-
-                    {data.recentWorkouts.map((w: any) => (
-                        <div
-                            key={w.id}
-                            className="bg-[#1a1a1a] border border-[#262626] rounded-xl p-4"
-                        >
-                            <p className="text-sm">
-                                Workout
-                            </p>
-
-                            <p className="text-xs text-gray-400">
-                                {new Date(w.date).toLocaleDateString()} •{" "}
-                                {new Date(w.date).toLocaleTimeString([], {
-                                    hour: "2-digit",
-                                    minute: "2-digit",
-                                })}
-                            </p>
-                        </div>
-                    ))}
-                </div>
-
                 {/* Action Buttons */}
                 <div className="space-y-3">
+                    <h2 className="text-lg font-semibold">All Exercises</h2>
                     <button
                         onClick={() => router.push("profile/exercises")}
                         className="w-full bg-[#1a1a1a] border border-[#262626] py-3 rounded-xl hover:bg-[#222] transition">
