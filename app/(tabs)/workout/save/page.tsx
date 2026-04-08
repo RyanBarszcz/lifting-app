@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { ChevronLeft } from "lucide-react";
 import { useWorkout } from "@/context/WorkoutContext";
 import { useAuth } from "@clerk/nextjs";
@@ -9,13 +9,15 @@ import { useAuth } from "@clerk/nextjs";
 export default function SaveWorkoutPage() {
     const router = useRouter();
     const params = useSearchParams();
-    const { workout, resetWorkout } = useWorkout();
+    const { workout, resetWorkout, updateWorkoutMeta } = useWorkout();
     const { getToken } = useAuth();
-
     const sessionId = params.get("sessionId");
+    const title = workout.title;
+    const notes = workout.notes;
 
-    const [title, setTitle] = useState("Workout");
-    const [notes, setNotes] = useState("");
+    useEffect(() => {
+        // console.log("Workout: ", workout);
+    }, []);
 
     // Stats
     const totalStats = workout.exercises.reduce(
@@ -36,19 +38,21 @@ export default function SaveWorkoutPage() {
         : 0;
 
     const formatTime = (totalSeconds: number) => {
-        const mins = Math.floor(totalSeconds / 60);
+        const hours = Math.floor(totalSeconds / 3600);
+        const mins = Math.floor((totalSeconds % 3600) / 60);
         const secs = totalSeconds % 60;
+
+        const hourLabel = hours === 1 ? "hr" : "hrs";
+
+        if (hours > 0) {
+            return `${hours}${hourLabel} ${mins}m ${secs}s`;
+        }
+
         return `${mins}m ${secs}s`;
     };
 
-    // Default title from template
-    useEffect(() => {
-        if (workout.templateName) {
-            setTitle(workout.templateName);
-        }
-    }, [workout.templateName]);
-
     const handleSave = async () => {
+
         try {
             const token = await getToken();
 
@@ -65,6 +69,11 @@ export default function SaveWorkoutPage() {
                 }))
                 .filter(ex => ex.sets.length > 0);
 
+            if (cleanedExercises.length === 0) {
+                alert("Complete at least one set before saving.");
+                return;
+            }
+
             await fetch(
                 `${process.env.NEXT_PUBLIC_API_URL}/sessions/${sessionId}/complete`,
                 {
@@ -75,14 +84,17 @@ export default function SaveWorkoutPage() {
                     },
                     body: JSON.stringify({
                         exercises: cleanedExercises,
-                        endNote: notes,
-                        title: title,
+                        endNote: notes.trim() || null,
+                        title: title.trim() || "Workout",
                     }),
                 }
             );
 
-            resetWorkout();
+            // console.log("Workout sent: ", workout);
+
             router.push("/workout");
+            resetWorkout();
+
 
         } catch (err) {
             console.error(err);
@@ -98,7 +110,10 @@ export default function SaveWorkoutPage() {
 
                 {/* TODO: When clicking back it should have the state of the workout from before. */}
                 {/* Should possibly save completed or not for sets */}
-                <button onClick={() => router.back()}>
+                <button onClick={() => {
+                    // console.log("Saved Workout info: ", workout);
+                    router.back()
+                }}>
                     <ChevronLeft />
                 </button>
 
@@ -120,7 +135,7 @@ export default function SaveWorkoutPage() {
                     <p className="text-sm text-gray-400 mb-1">Workout Title</p>
                     <input
                         value={title}
-                        onChange={(e) => setTitle(e.target.value)}
+                        onChange={(e) => updateWorkoutMeta({ title: e.target.value })}
                         className="w-full bg-[#1a1a1a] rounded-xl px-4 py-3 outline-none"
                     />
                 </div>
@@ -158,7 +173,7 @@ export default function SaveWorkoutPage() {
                     <p className="text-sm text-gray-400 mb-1">Description</p>
                     <textarea
                         value={notes}
-                        onChange={(e) => setNotes(e.target.value)}
+                        onChange={(e) => updateWorkoutMeta({ notes: e.target.value })}
                         className="w-full bg-[#1a1a1a] rounded-xl px-4 py-3 outline-none min-h-[120px]"
                         placeholder="How did it feel?"
                     />

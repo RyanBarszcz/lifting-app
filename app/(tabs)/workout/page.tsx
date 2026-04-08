@@ -5,21 +5,7 @@ import RoutineCard from "@/components/RoutineCard";
 import { useWorkout } from "@/context/WorkoutContext";
 import { useAuth } from "@clerk/nextjs";
 import { useEffect, useState } from "react";
-import { Routine, APIRoutine } from "@/types";
-
-// interface RoutineExercise {
-//     exerciseId: string;
-//     name: string;
-//     order: number;
-//     defaultSets: number;
-//     defaultReps: number;
-// }
-
-// interface Routine {
-//     id: string;
-//     title: string;
-//     exercises: RoutineExercise[];
-// }
+import { Routine } from "@/types";
 
 
 export default function WorkoutPage() {
@@ -44,24 +30,24 @@ export default function WorkoutPage() {
 
                 const data = await res.json();
 
-                console.log("Data: ", data);
+                // console.log("Routine Data: ", data);
 
-                const formatted: Routine[] = data.map((r: APIRoutine) => ({
+                const formatted: Routine[] = data.map((r: Routine) => ({
                     id: r.id,
                     title: r.title,
                     exercises: r.exercises.map((e) => ({
                         id: crypto.randomUUID(), // UI id
                         exerciseId: e.exerciseId, // DB id
-                        title: e.name,
-                        sets: Array.from({ length: e.defaultSets }, (_, i) => ({
+                        name: e.name,
+                        sets: e.sets.map((s) => ({
                             id: crypto.randomUUID(),
-                            reps: e.defaultReps,
+                            reps: s.reps,
                         })),
                     })),
                 }));
 
                 setRoutines(formatted);
-                console.log("Formatted: ", formatted);
+                // console.log("Formatted Routines: ", formatted);
 
             } catch (err) {
                 console.error("Failed to fetch routines", err);
@@ -87,7 +73,7 @@ export default function WorkoutPage() {
 
             if (!res.ok) throw new Error("Failed to delete");
 
-            console.log("Deleted routine: ", id);
+            // console.log("Deleted routine: ", id);
 
             // remove from UI immediately
             setRoutines((prev) => prev.filter((r) => r.id !== id));

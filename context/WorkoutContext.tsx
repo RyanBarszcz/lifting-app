@@ -4,36 +4,6 @@ import { createContext, useContext, useState, useEffect } from "react";
 import { DBExercise, WorkoutExercise, WorkoutState, StartExercise } from "@/types";
 import { useAuth } from "@clerk/nextjs";
 
-// interface WorkoutSet {
-//     setNumber: number;
-//     reps: number;
-//     weight: number | null;
-//     completed: boolean;
-// }
-
-// interface WorkoutExercise {
-//     id: string;
-//     exerciseId: string;
-//     name: string;
-//     sets: WorkoutSet[];
-// }
-
-// interface WorkoutState {
-//     sessionId: string | null;
-//     startedAt: number | null;
-//     exercises: WorkoutExercise[];
-// }
-
-// interface StartExercise {
-//     exerciseId: string;
-//     name: string;
-//     sets: {
-//         setNumber: number;
-//         reps: number;
-//     }[];
-// }
-
-
 
 interface WorkoutContextType {
     workout: WorkoutState;
@@ -42,10 +12,13 @@ interface WorkoutContextType {
     resetWorkout: () => void;
     startWorkoutWithExercises: (
         sessionId: string | null,
-        exercises: StartExercise[]
+        exercises: StartExercise[],
+        templateName?: string | null
     ) => Promise<void>;
     reorderExercises: (newOrder: WorkoutExercise[]) => void;
     deleteExercise: (id: string) => void;
+    updateWorkoutMeta: (data: { title?: string; notes?: string }) => void;
+    updateWorkoutExercises: (exercises: WorkoutExercise[]) => void;
 }
 
 const WorkoutContext = createContext<WorkoutContextType | null>(null);
@@ -55,6 +28,9 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
         sessionId: null,
         startedAt: null,
         exercises: [],
+        templateName: null,
+        title: "Workout",
+        notes: "",
     });
     const { getToken } = useAuth();
 
@@ -76,6 +52,9 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
             sessionId,
             startedAt: Date.now(),
             exercises: [],
+            templateName: null,
+            title: "Workout",
+            notes: "",
         });
     };
 
@@ -123,6 +102,9 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
             sessionId: null,
             startedAt: null,
             exercises: [],
+            templateName: null,
+            title: "Workout",
+            notes: "",
         });
     };
 
@@ -149,7 +131,8 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
 
     const startWorkoutWithExercises = async (
         sessionId: string | null,
-        exercises: StartExercise[]
+        exercises: StartExercise[],
+        templateName?: string | null,
     ) => {
         const builtExercises: WorkoutExercise[] = exercises.map((ex) => ({
             id: crypto.randomUUID(),
@@ -170,9 +153,26 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
             sessionId: finalSessionId,
             startedAt: Date.now(),
             exercises: builtExercises,
+            templateName: templateName ?? null,
+            title: templateName ?? "Workout", // auto-fill from routine
+            notes: "",
         });
 
-        console.log("Routine built exercises:", builtExercises);
+        // console.log("Routine built exercises:", builtExercises);
+    };
+
+    const updateWorkoutMeta = (data: { title?: string; notes?: string }) => {
+        setWorkout(prev => ({
+            ...prev,
+            ...data,
+        }));
+    };
+
+    const updateWorkoutExercises = (newExercises: WorkoutExercise[]) => {
+        setWorkout(prev => ({
+            ...prev,
+            exercises: newExercises,
+        }));
     };
 
 
@@ -193,6 +193,8 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
                 resetWorkout,
                 startWorkoutWithExercises,
                 reorderExercises,
+                updateWorkoutMeta,
+                updateWorkoutExercises,
             }}
         >
             {children}

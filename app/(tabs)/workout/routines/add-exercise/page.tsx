@@ -7,13 +7,6 @@ import { useRoutine } from "@/context/RoutineContext";
 import { DBExercise } from "@/types";
 
 
-// interface Exercise {
-//     id: string,
-//     name: string,
-//     muscleGroup?: string,
-//     category?: string,
-// }
-
 export default function AddExercisePage() {
     const router = useRouter();
     const { addExercises } = useRoutine();
@@ -118,7 +111,7 @@ export default function AddExercisePage() {
                             addExercises(selected);
                             router.push("/workout/routines/create");
 
-                            console.log(selected);
+                            // console.log(selected);
                         }}
                         className="w-full bg-blue-500 text-white py-3 rounded-xl font-semibold"
                     >

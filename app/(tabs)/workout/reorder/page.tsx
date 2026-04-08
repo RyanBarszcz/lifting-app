@@ -23,10 +23,6 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { WorkoutExercise } from "@/types";
 
-// interface Exercise {
-//     id: string;
-//     name: string;
-// }
 
 function SortableItem({ exercise }: { exercise: WorkoutExercise }) {
     const {

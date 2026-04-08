@@ -7,16 +7,6 @@ interface ExerciseHistory {
     sets: CompletedSet[];
 }
 
-// interface Set {
-//     weight: number;
-//     reps: number;
-// }
-
-// interface Exercise {
-//     id: string;
-//     name: string;
-//     sets: Set[];
-// }
 
 export default function ExerciseHistoryCard({ exercise }: { exercise: ExerciseHistory }) {
     return (

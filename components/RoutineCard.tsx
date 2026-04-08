@@ -7,26 +7,16 @@ import { useState } from "react";
 import { useAuth } from "@clerk/nextjs";
 import { Routine } from "@/types";
 
-// interface RoutineExercise {
-//     exerciseId: string;
-//     name: string;
-//     order: number;
-//     defaultSets: number;
-//     defaultReps: number;
-// }
-
-// interface Routine {
-//     id: string;
-//     title: string;
-//     exercises: RoutineExercise[];
-// }
 
 export default function RoutineCard({ routine, onDelete }: { routine: Routine; onDelete: (id: string) => void; }) {
     const router = useRouter();
     const { startWorkoutWithExercises } = useWorkout();
     const { getToken } = useAuth();
-
     const [showDeleteModal, setShowDeleteModal] = useState(false);
+
+    // useEffect(() => {
+    //     console.log("Routine: ", routine);
+    // }, []);
 
     const handleStartRoutine = async () => {
         try {
@@ -52,16 +42,14 @@ export default function RoutineCard({ routine, onDelete }: { routine: Routine; o
 
             const session = await res.json();
 
-            console.log("Exercises we start with:", session);
-            console.log("Routine things to start: ", routine);
+            // console.log("Exercises we start with:", session);
+            // console.log("Routine things to start: ", routine);
 
-            // use DB session id
-            // TODO: Needs to correctly add the correct amount of sets
             startWorkoutWithExercises(
                 session.id,
                 routine.exercises.map(e => ({
                     exerciseId: e.exerciseId,
-                    name: e.title,
+                    name: e.name,
                     sets: e.sets.map((set, i) => ({
                         setNumber: i + 1,
                         reps: set.reps,
@@ -93,7 +81,7 @@ export default function RoutineCard({ routine, onDelete }: { routine: Routine; o
 
             {/* Exercise Preview (2-line clamp) */}
             <p className="text-sm text-gray-400 leading-relaxed line-clamp-2">
-                {routine.exercises.map(e => e.title).join(", ")}
+                {routine.exercises.map(e => e.name).join(", ")}
             </p>
 
             {/* Start Button */}

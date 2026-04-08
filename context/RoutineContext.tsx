@@ -3,22 +3,7 @@
 import { createContext, useContext, useState } from "react";
 import { RoutineState, RoutineExercise, RoutineSet, DBExercise } from "@/types";
 
-// interface RoutineSet {
-//     id: string;
-//     reps: number;
-// }
 
-// interface RoutineExercise {
-//     id: string; // UI ID
-//     exerciseId: string; // DB ID
-//     title: string;
-//     sets: RoutineSet[];
-// }
-
-// interface RoutineState {
-//     title: string;
-//     exercises: RoutineExercise[];
-// }
 
 interface RoutineContextType {
     routine: RoutineState;
@@ -28,6 +13,7 @@ interface RoutineContextType {
     updateExerciseSets: (exerciseId: string, sets: RoutineSet[]) => void;
     deleteExercise: (exerciseId: string) => void;
     resetRoutine: () => void;
+    loadRoutineFromWorkout: (exercises: RoutineExercise[], title?: string) => void;
 }
 
 const RoutineContext = createContext<RoutineContextType | null>(null);
@@ -108,6 +94,23 @@ export const RoutineProvider = ({ children }: { children: React.ReactNode }) => 
         });
     };
 
+    const loadRoutineFromWorkout = (exercises: RoutineExercise[], title?: string) => {
+        const builtExercises: RoutineExercise[] = exercises.map((ex) => ({
+            id: crypto.randomUUID(),
+            exerciseId: ex.exerciseId,
+            title: ex.title,
+            sets: ex.sets.map((set) => ({
+                id: crypto.randomUUID(),
+                reps: set.reps,
+            })),
+        }));
+
+        setRoutine({
+            title: title ?? "",
+            exercises: builtExercises,
+        });
+    };
+
     return (
         <RoutineContext.Provider
             value={{
@@ -118,6 +121,7 @@ export const RoutineProvider = ({ children }: { children: React.ReactNode }) => 
                 updateExerciseSets,
                 deleteExercise,
                 resetRoutine,
+                loadRoutineFromWorkout,
             }}
         >
             {children}

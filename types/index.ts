@@ -17,7 +17,7 @@ export interface RoutineSet {
 export interface RoutineExercise {
     id: string;          // UI id
     exerciseId: string;  // DB id
-    title: string;
+    name: string;
     sets: RoutineSet[];
 }
 
@@ -68,6 +68,9 @@ export interface WorkoutState {
     sessionId: string | null;
     startedAt: number | null;
     exercises: WorkoutExercise[];
+    templateName?: string | null;
+    title: string;
+    notes: string;
 }
 
 

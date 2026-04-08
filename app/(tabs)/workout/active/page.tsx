@@ -19,7 +19,7 @@ interface UIExercise {
 
 export default function ActiveWorkoutPage() {
     const router = useRouter();
-    const { workout, resetWorkout, deleteExercise } = useWorkout();
+    const { workout, resetWorkout, deleteExercise, updateWorkoutExercises } = useWorkout();
     const workoutExercises = workout.exercises;
     const { getToken } = useAuth();
 
@@ -46,13 +46,29 @@ export default function ActiveWorkoutPage() {
     );
 
     const updateExerciseSets = (exerciseId: string, newSets: UIExercise["sets"]) => {
-        setExercises(prev =>
-            prev.map(ex =>
+        setExercises(prev => {
+            const updated = prev.map(ex =>
                 ex.id === exerciseId
                     ? { ...ex, sets: newSets }
                     : ex
-            )
-        );
+            );
+
+            // sync to context
+            updateWorkoutExercises(
+                updated.map(ex => ({
+                    id: ex.id,
+                    exerciseId: ex.exerciseId,
+                    name: ex.name,
+                    sets: ex.sets.map(s => ({
+                        setNumber: s.setNumber,
+                        reps: s.reps,
+                        weight: s.weight,
+                        completed: s.completed,
+                    })),
+                }))
+            );
+            return updated;
+        });
     };
 
     // Initialize exercises from context
@@ -62,7 +78,7 @@ export default function ActiveWorkoutPage() {
             return;
         }
 
-        console.log("Workout Exercises: ", workoutExercises);
+        // console.log("Workout Exercises: ", workoutExercises);
 
         const formatted: UIExercise[] = workoutExercises.map((e) => ({
             id: e.id,
@@ -77,7 +93,7 @@ export default function ActiveWorkoutPage() {
             })),
         }));
 
-        console.log("For the workout: ", formatted);
+        // console.log("For the workout: ", formatted);
 
 
         setExercises(formatted);
@@ -179,6 +195,7 @@ export default function ActiveWorkoutPage() {
                                 setShowFinishModal(true);
                             } else {
                                 router.push(`/workout/save?sessionId=${workout.sessionId}`);
+                                // console.log("Workout before save page: ", workout);
                             }
                         }}
                         className="bg-blue-500 rounded-lg py-2 px-4 text-white font-semibold">

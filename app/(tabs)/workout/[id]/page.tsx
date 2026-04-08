@@ -32,8 +32,8 @@ export default function WorkoutDetailsPage() {
 
             );
             const data = await res.json();
-            console.log(`Id workout: ${id}`);
-            console.log("Data: ", data);
+            // console.log(`Id workout: ${id}`);
+            // console.log("Data: ", data);
             setWorkout(data);
         };
 

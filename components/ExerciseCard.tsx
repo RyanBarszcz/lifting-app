@@ -5,24 +5,6 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { WorkoutExercise, WorkoutSet, PreviousSet } from "@/types";
 
-// interface WorkoutSet {
-//     id: string;
-//     weight: number;
-//     reps: number;
-//     completed: boolean;
-// }
-
-// interface Exercise {
-//     id: string;
-//     title: string;
-//     sets: WorkoutSet[];
-// }
-
-// interface PreviousSet {
-//     setNumber: number;
-//     weight: number;
-//     reps: number;
-// }
 
 export default function ExerciseCard({
     exercise,

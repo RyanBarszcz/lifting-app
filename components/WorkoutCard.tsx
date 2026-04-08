@@ -2,32 +2,45 @@
 
 import { Award, MoreHorizontal } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { WorkoutDetail, WorkoutExercise, WorkoutSummary } from '@/types';
-import { useState } from 'react';
+import { RoutineExercise, WorkoutDetail, WorkoutExercise, WorkoutSummary } from '@/types';
+import { useState, useEffect, useRef } from 'react';
 import { useWorkout } from '@/context/WorkoutContext';
 import { useAuth } from '@clerk/nextjs';
+import { useRoutine } from '@/context/RoutineContext';
 
-// interface Workout {
-//     id: string;
-//     title: string;
-//     completedAt: string;
-//     duration: string;
-//     records: number;
-//     totalVolume: number;
-//     exercises: {
-//         name: string;
-//         sets: number;
-//     }[];
-// }
 
 export default function WorkoutCard({ workout }: { workout: WorkoutSummary }) {
     const router = useRouter();
     const [showMenu, setShowMenu] = useState(false);
     const { startWorkoutWithExercises } = useWorkout();
     const { getToken } = useAuth();
+    const { loadRoutineFromWorkout } = useRoutine();
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const menuRef = useRef<HTMLDivElement | null>(null);
+    const totalSets = workout.exercises.reduce(
+        (acc, ex) => acc + ex.sets,
+        0
+    );
 
     const visibleExercises = workout.exercises.slice(0, 3);
     const remaining = workout.exercises.length - 3;
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (
+                menuRef.current &&
+                !menuRef.current.contains(event.target as Node)
+            ) {
+                setShowMenu(false);
+            }
+        };
+
+        document.addEventListener("mousedown", handleClickOutside);
+
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, []);
 
     const handleCopyWorkout = async () => {
         try {
@@ -44,7 +57,7 @@ export default function WorkoutCard({ workout }: { workout: WorkoutSummary }) {
             );
 
             const fullWorkout: WorkoutDetail = await res.json();
-            console.log("Full: ", fullWorkout);
+            // console.log("Full: ", fullWorkout);
 
             // Build exercises with REAL sets
             const exercises: WorkoutExercise[] = fullWorkout.exercises.map((ex) => ({
@@ -71,11 +84,93 @@ export default function WorkoutCard({ workout }: { workout: WorkoutSummary }) {
         }
     };
 
+    const handleMakeRoutine = async () => {
+        try {
+            const token = await getToken();
+
+            // fetch full workout
+            const res = await fetch(
+                `${process.env.NEXT_PUBLIC_API_URL}/workout/${workout.id}`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+
+            if (!res.ok) {
+                throw new Error("Failed to fetch workout");
+            }
+
+            const fullWorkout: WorkoutDetail = await res.json();
+            // console.log("Full Workout: ", fullWorkout);
+
+            //convert to routine format
+            const exercises: RoutineExercise[] = fullWorkout.exercises.map((ex) => ({
+                id: crypto.randomUUID(),
+                exerciseId: ex.exerciseId,
+                title: ex.name,
+                sets: ex.sets.map((set) => ({
+                    id: crypto.randomUUID(),
+                    reps: set.reps,
+                })),
+            }));
+
+            // console.log("Converted: ", exercises);
+
+            // Load into routine context
+            loadRoutineFromWorkout(exercises, fullWorkout.title);
+
+            // Close menu
+            setShowMenu(false);
+
+            // Navigate
+            router.push("/workout/routines/create");
+
+        } catch (err) {
+            console.error(err);
+            alert("Failed to create routine");
+        }
+    };
+
+    const handleDeleteWorkout = async () => {
+        setShowMenu(false);
+        setShowDeleteModal(true);
+    }
+
+    const confirmDeleteWorkout = async () => {
+        try {
+            const token = await getToken();
+
+            const res = await fetch(
+                `${process.env.NEXT_PUBLIC_API_URL}/workout/${workout.id}`,
+                {
+                    method: "DELETE",
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+
+            if (!res.ok) {
+                throw new Error("Failed to delete workout");
+            }
+
+            setShowDeleteModal(false);
+
+            // quick refresh (fine for now)
+            window.location.reload();
+
+        } catch (err) {
+            console.error(err);
+            alert("Failed to delete workout");
+        }
+    };
 
     return (
         <div
             onClick={() => router.push(`/workout/${workout.id}`)}
-            className="bg-[#1a1a1a] border border-[#262626] rounded-2xl p-5 space-y-4 mb-6">
+            className="relative bg-[#1a1a1a] border border-[#262626] rounded-2xl p-5 space-y-4 mb-6">
 
             {/* Title + Date */}
             <div>
@@ -85,9 +180,6 @@ export default function WorkoutCard({ workout }: { workout: WorkoutSummary }) {
                         <h2 className="text-xl font-semibold">{workout.title}</h2>
                     )}
 
-
-                    {/* TODO: Make it open options for workout */}
-                    {/* Save as Routine, Copy Workout, Delete Workout */}
                     <button
                         onClick={(e) => {
                             e.stopPropagation();
@@ -98,6 +190,7 @@ export default function WorkoutCard({ workout }: { workout: WorkoutSummary }) {
                     </button>
                     {showMenu && (
                         <div
+                            ref={menuRef}
                             onClick={(e) => e.stopPropagation()}
                             className="absolute right-5 mt-2 bg-[#1a1a1a] border border-[#262626] rounded-lg shadow-lg z-20 w-48"
                         >
@@ -109,14 +202,14 @@ export default function WorkoutCard({ workout }: { workout: WorkoutSummary }) {
                             </button>
 
                             <button
-                                onClick={() => console.log("Save as routine")}
+                                onClick={() => handleMakeRoutine()}
                                 className="w-full text-left px-4 py-2 hover:bg-[#262626]"
                             >
                                 Save as Routine
                             </button>
 
                             <button
-                                onClick={() => console.log("Delete workout")}
+                                onClick={() => handleDeleteWorkout()}
                                 className="w-full text-left px-4 py-2 hover:bg-[#262626] text-red-500"
                             >
                                 Delete Workout
@@ -145,18 +238,21 @@ export default function WorkoutCard({ workout }: { workout: WorkoutSummary }) {
                         Volume
                     </span>
                     <span className="text-gray-300 font-medium">
-                        {workout.totalVolume}
+                        {workout.totalVolume} lbs
                     </span>
                 </div>
 
+                {/* TODO: Do something with this. Maybe change to sets */}
                 <div className="flex flex-col">
                     <span className="text-gray-500 text-xs tracking-wide">
-                        Records
+                        {/* Awards */}
+                        Sets
                     </span>
                     <div className="flex items-center gap-1">
-                        <Award size={16} className="text-yellow-400" />
+                        {/* <Award size={16} className="text-yellow-400" /> */}
                         <span className="text-white font-medium">
-                            {workout.records}
+                            {/* {workout.records} */}
+                            {totalSets}
                         </span>
                     </div>
                 </div>
@@ -169,7 +265,7 @@ export default function WorkoutCard({ workout }: { workout: WorkoutSummary }) {
             <div className="space-y-1 text-md text-gray-300">
                 {visibleExercises.map((exercise, index) => (
                     <div key={index}>
-                        {exercise.sets} sets {exercise.name}
+                        {exercise.sets} {exercise.sets === 1 ? "set" : "sets"} {exercise.name}
                     </div>
                 ))}
 
@@ -179,6 +275,35 @@ export default function WorkoutCard({ workout }: { workout: WorkoutSummary }) {
                     </div>
                 )}
             </div>
+            {showDeleteModal && (
+                <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+                    <div className="bg-[#1a1a1a] border border-[#262626] rounded-2xl p-6 w-80 text-center space-y-4">
+                        <h2 className="text-lg font-semibold">
+                            Delete Workout?
+                        </h2>
+
+                        <p className="text-sm text-gray-400">
+                            This cannot be undone.
+                        </p>
+
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => setShowDeleteModal(false)}
+                                className="flex-1 bg-[#262626] py-2 rounded-lg"
+                            >
+                                No
+                            </button>
+
+                            <button
+                                onClick={confirmDeleteWorkout}
+                                className="flex-1 bg-red-500 py-2 rounded-lg"
+                            >
+                                Yes
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

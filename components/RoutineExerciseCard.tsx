@@ -5,16 +5,6 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { RoutineExercise, RoutineSet } from "@/types";
 
-// interface RoutineSet {
-//     id: string;
-//     reps: number;
-// }
-
-// interface Exercise {
-//     id: string;
-//     title: string;
-//     sets: RoutineSet[];
-// }
 
 export default function RoutineExerciseCard({
     exercise,
@@ -61,7 +51,7 @@ export default function RoutineExerciseCard({
             {/* Header */}
             <div className="flex justify-between items-center">
                 <h2 className="text-blue-500 text-lg font-semibold">
-                    {exercise.title}
+                    {exercise.name}
                 </h2>
 
                 <button

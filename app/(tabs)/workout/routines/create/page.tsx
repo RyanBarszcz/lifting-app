@@ -69,7 +69,7 @@ export default function CreateRoutinePage() {
             // Success
             resetRoutine();
             router.push("/workout");
-            console.log("Routine saved:", payload);
+            // console.log("Routine saved:", payload);
             toast.success("Routine saved!", {
                 description: "Ready to use in your workouts",
             });
