@@ -79,7 +79,6 @@ export default function HomePage() {
 
             {/* Scrollable Content */}
             {/* TODO: Later add edit workout  */}
-            {/* TODO: Make loading pulse */}
             <div className="px-4 overflow-y-auto pb-24 space-y-6">
 
                 {loading && workouts.length === 0 ? (

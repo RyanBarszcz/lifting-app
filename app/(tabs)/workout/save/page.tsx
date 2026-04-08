@@ -108,7 +108,6 @@ export default function SaveWorkoutPage() {
             {/* HEADER */}
             <div className="sticky top-0 bg-[#1a1a1a] px-4 py-3 flex items-center justify-between border-b border-[#262626]">
 
-                {/* TODO: When clicking back it should have the state of the workout from before. */}
                 {/* Should possibly save completed or not for sets */}
                 <button onClick={() => {
                     // console.log("Saved Workout info: ", workout);

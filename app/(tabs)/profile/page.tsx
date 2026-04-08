@@ -3,6 +3,10 @@
 import { useAuth, useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { getCache, setCache } from "@/lib/cache";
+import { useClerk } from "@clerk/nextjs";
+import SkeletonProfileHeader from "@/components/SkeletonProfileHeader";
+import SkeletonStatCard from "@/components/SkeletonStatCard";
 
 
 export default function ProfilePage() {
@@ -10,118 +14,141 @@ export default function ProfilePage() {
     const { getToken } = useAuth();
     const { user } = useUser();
     const router = useRouter();
+    const [loading, setLoading] = useState(true);
+    const { signOut } = useClerk();
 
-    // TODO: Set profile data to cache
-    // TODO: Add blue sign out button to top right
-    // TODO: Add skeleton for stats
     useEffect(() => {
         const fetchProfileData = async () => {
-            const token = await getToken();
+            setLoading(true);
 
-            const res = await fetch(
-                `${process.env.NEXT_PUBLIC_API_URL}/profile`,
-                {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                }
-            );
+            // await new Promise((res) => setTimeout(res, 2000));
 
-            const data = await res.json();
-            setData(data);
-        };
+
+            const cached = getCache("profile");
+
+            if (cached) {
+                setData(cached);
+                setLoading(false);
+            }
+
+            try {
+                const token = await getToken();
+
+                const res = await fetch(
+                    `${process.env.NEXT_PUBLIC_API_URL}/profile`,
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                        },
+                    }
+                );
+
+                const data = await res.json();
+                setData(data);
+                setCache("profile", data);
+            } catch (err) {
+                console.error("Failed to fetch profile", err);
+            } finally {
+                setLoading(false);
+            }
+        }
 
         fetchProfileData();
     }, []);
-
-    if (!data) {
-        return <div className="text-white p-6">Loading Profile...</div>;
-    }
 
     return (
         <div className="w-full text-white px-4">
 
             {/* Sticky Header */}
-            <div className="sticky top-0 z-20 bg-black px-4 pt-6 pb-4">
+            <div className="sticky top-0 z-20 bg-black px-4 pt-6 pb-4 flex justify-between items-center">
                 <h1 className="text-2xl font-semibold">Profile</h1>
+
+                <button
+                    onClick={() => {
+                        localStorage.clear();
+                        signOut();
+                    }}
+                    className="text-white font-semibold rounded-lg bg-red-700 py-2 px-4"
+                >
+                    Sign Out
+                </button>
             </div>
 
             <div className="px-4 space-y-8 pb-24">
 
                 {/* User Summary */}
-                <div className="bg-[#1a1a1a] border border-[#262626] rounded-2xl p-6 space-y-2">
-                    <h2 className="text-xl font-semibold">{user?.fullName}</h2>
+                {loading && !data ? (
+                    <SkeletonProfileHeader />
+                ) : (
+                    <div className="bg-[#1a1a1a] border border-[#262626] rounded-2xl p-6 space-y-2">
+                        <h2 className="text-xl font-semibold">{user?.fullName}</h2>
 
-                    <p className="text-gray-400 text-sm">
-                        {data.workouts} workouts completed
-                    </p>
+                        <p className="text-gray-400 text-sm">
+                            {data.workouts} workouts completed
+                        </p>
 
-                    {/* Streak */}
-                    <p className="text-sm text-blue-500 mt-1">
-                        {data.streak} day streak
-                    </p>
-                </div>
+                        <p className="text-sm text-blue-500 mt-1">
+                            {data.streak} day streak
+                        </p>
+                    </div>
+                )}
 
                 {/* Stats Section */}
                 <div className="space-y-4">
                     <h2 className="text-lg font-semibold">Statistics</h2>
 
                     <div className="grid grid-cols-3 gap-2">
-
-                        <StatCard
-                            label="Total Volume"
-                            value={`${data.totalVolume.toLocaleString()} lbs`}
-                        />
-
-                        <StatCard
-                            label="Total Duration"
-                            value={`${data.totalDurationHours} hrs`}
-                        />
-
-                        <StatCard
-                            label="Total Reps"
-                            value={data.totalReps.toLocaleString()}
-                        />
-
-                        {/* <StatCard
-                            label="Top Muscle"
-                            value={data.topMuscle || "—"}
-                        /> */}
-
+                        {loading && !data ? (
+                            [...Array(3)].map((_, i) => <SkeletonStatCard key={i} />)
+                        ) : (
+                            <>
+                                <StatCard
+                                    label="Total Volume"
+                                    value={`${data.totalVolume.toLocaleString()} lbs`}
+                                />
+                                <StatCard
+                                    label="Total Duration"
+                                    value={`${data.totalDurationHours} hrs`}
+                                />
+                                <StatCard
+                                    label="Total Reps"
+                                    value={data.totalReps.toLocaleString()}
+                                />
+                            </>
+                        )}
                     </div>
                 </div>
 
-                {/* Advanced Stats */}
+                {/* Averages */}
                 <div className="space-y-4">
                     <h2 className="text-lg font-semibold">Averages</h2>
 
                     <div className="grid grid-cols-2 gap-4">
-
-                        <StatCard
-                            label="Avg Volume"
-                            value={`${data.avgVolume.toLocaleString()} lbs`}
-                        />
-
-                        <StatCard
-                            label="Avg Duration"
-                            value={`${data.avgDuration} min`}
-                        />
-
+                        {loading && !data ? (
+                            [...Array(2)].map((_, i) => <SkeletonStatCard key={i} />)
+                        ) : (
+                            <>
+                                <StatCard
+                                    label="Avg Volume"
+                                    value={`${data.avgVolume.toLocaleString()} lbs`}
+                                />
+                                <StatCard
+                                    label="Avg Duration"
+                                    value={`${data.avgDuration} min`}
+                                />
+                            </>
+                        )}
                     </div>
                 </div>
-
                 {/* Action Buttons */}
                 <div className="space-y-3">
                     <h2 className="text-lg font-semibold">All Exercises</h2>
-                    <button
-                        onClick={() => router.push("profile/exercises")}
-                        className="w-full bg-[#1a1a1a] border border-[#262626] py-3 rounded-xl hover:bg-[#222] transition">
+                    <button onClick={() => router.push("profile/exercises")} className="w-full bg-[#1a1a1a] border border-[#262626] py-3 rounded-xl hover:bg-[#222] transition">
                         Exercises
                     </button>
                 </div>
-
             </div>
-        </div>
+        </div >
     );
 }
 

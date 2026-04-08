@@ -5,27 +5,46 @@ import { useRouter } from "next/navigation";
 import { Search } from "lucide-react";
 import { useRoutine } from "@/context/RoutineContext";
 import { DBExercise } from "@/types";
+import { getCache, setCache } from "@/lib/cache";
+import SkeletonExerciseRow from "@/components/SkeletonExerciseRow";
 
-// TODO: Set exercises to cache, check if there
 export default function AddExercisePage() {
     const router = useRouter();
     const { addExercises } = useRoutine();
 
     const [search, setSearch] = useState("");
     const [selected, setSelected] = useState<DBExercise[]>([]);
-    const [exercises, setExercises] = useState<DBExercise[]>([]);
+    const [exercises, setExercises] = useState<DBExercise[]>(() => {
+        if (typeof window !== "undefined") {
+            return getCache("exercises") || [];
+        }
+        return [];
+    });
+    const [loading, setLoading] = useState(true);
 
     // Get exercises from DB
     useEffect(() => {
         const fetchExercises = async () => {
+            setLoading(true);
+
+            const cached = getCache("exercises");
+
+            if (cached) {
+                setExercises(cached);
+                setLoading(false);
+            }
+
             try {
                 const res = await fetch(
                     `${process.env.NEXT_PUBLIC_API_URL}/exercises`
                 );
                 const data = await res.json();
+                setCache("exercises", data);
                 setExercises(data);
             } catch (err) {
                 console.error("Failed to fetch exercises", err);
+            } finally {
+                setLoading(false);
             }
         };
 
@@ -84,22 +103,34 @@ export default function AddExercisePage() {
             {/* Exercise List */}
             <div className="flex-1 overflow-y-auto px-6 py-4 space-y-2 pb-32">
 
-                {filteredExercises.map((exercise) => {
-                    const isSelected = selected.some(e => e.id === exercise.id);
+                {loading && exercises.length === 0 ? (
+                    <>
+                        {[...Array(8)].map((_, i) => (
+                            <SkeletonExerciseRow key={i} />
+                        ))}
+                    </>
+                ) : filteredExercises.length === 0 ? (
+                    <p className="text-gray-500 text-sm text-center mt-10">
+                        No exercises found
+                    </p>
+                ) : (
+                    filteredExercises.map((exercise) => {
+                        const isSelected = selected.some(e => e.id === exercise.id);
 
-                    return (
-                        <button
-                            key={exercise.id}
-                            onClick={() => toggleExercise(exercise)}
-                            className={`w-full text-left px-4 py-3 rounded-xl transition-colors ${isSelected
-                                ? "bg-blue-500 text-white"
-                                : "bg-[#1a1a1a] hover:bg-[#262626]"
-                                }`}
-                        >
-                            {exercise.name}
-                        </button>
-                    );
-                })}
+                        return (
+                            <button
+                                key={exercise.id}
+                                onClick={() => toggleExercise(exercise)}
+                                className={`w-full text-left px-4 py-3 rounded-xl transition-colors ${isSelected
+                                    ? "bg-blue-500 text-white"
+                                    : "bg-[#1a1a1a] hover:bg-[#262626]"
+                                    }`}
+                            >
+                                {exercise.name}
+                            </button>
+                        );
+                    })
+                )}
 
             </div>
 
