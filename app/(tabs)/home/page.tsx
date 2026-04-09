@@ -7,11 +7,11 @@ import SkeletonWorkoutCard from "@/components/SkeletonWorkoutCard";
 import { fetchWorkouts } from "@/lib/services/workoutService";
 import { handleError } from "@/lib/utils/handleError";
 import { toast } from "sonner";
-import { WorkoutState } from "@/types";
+import { WorkoutSummary } from "@/types";
 
 export default function HomePage() {
     const { getToken, isLoaded } = useAuth();
-    const [workouts, setWorkouts] = useState([]);
+    const [workouts, setWorkouts] = useState<WorkoutSummary[]>([]);
     const [loading, setLoading] = useState(true);
     const [page, setPage] = useState(1);
     const [hasMore, setHasMore] = useState(true);
