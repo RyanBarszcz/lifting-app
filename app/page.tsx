@@ -6,6 +6,8 @@ import { useUser } from "@clerk/nextjs";
 import { Dumbbell } from "lucide-react";
 import { SignInButton, SignUpButton } from "@clerk/nextjs";
 
+// TODO: DO the utils folder structure
+// TODO: zod
 export default function LandingPage() {
   const { isSignedIn, isLoaded } = useUser();
   const router = useRouter();

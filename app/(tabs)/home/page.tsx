@@ -14,7 +14,6 @@ export default function HomePage() {
     const [hasMore, setHasMore] = useState(true);
     const { user } = useUser();
 
-    // TODO: Make sure clear cache at logout
     const fetchWorkouts = async (pageNum = 1) => {
         if (pageNum === 1) {
             setLoading(true);

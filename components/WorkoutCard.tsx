@@ -242,7 +242,6 @@ export default function WorkoutCard({ workout }: { workout: WorkoutSummary }) {
                     </span>
                 </div>
 
-                {/* TODO: Do something with this. Maybe change to sets */}
                 <div className="flex flex-col">
                     <span className="text-gray-500 text-xs tracking-wide">
                         {/* Awards */}

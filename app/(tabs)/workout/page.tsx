@@ -6,6 +6,8 @@ import { useWorkout } from "@/context/WorkoutContext";
 import { useAuth } from "@clerk/nextjs";
 import { useEffect, useState } from "react";
 import { Routine } from "@/types";
+import { getCache, setCache } from "@/lib/cache";
+import SkeletonRoutineCard from "@/components/SkeletonRoutineCard";
 
 
 export default function WorkoutPage() {
@@ -13,11 +15,23 @@ export default function WorkoutPage() {
     const { startWorkout } = useWorkout();
     const { getToken } = useAuth();
     const [routines, setRoutines] = useState<Routine[]>([]);
+    const [loading, setLoading] = useState(true);
 
-    // TODO: SET Routines to cache
-    // TODO: Add skeleton for routine cards
+
     useEffect(() => {
         const fetchRoutines = async () => {
+            setLoading(true);
+
+            // await new Promise((res) => setTimeout(res, 2000));
+
+
+            const cached = getCache("routines");
+
+            if (cached) {
+                setRoutines(cached);
+                setLoading(false);
+            }
+
             try {
                 const token = await getToken();
 
@@ -32,14 +46,12 @@ export default function WorkoutPage() {
 
                 const data = await res.json();
 
-                // console.log("Routine Data: ", data);
-
                 const formatted: Routine[] = data.map((r: Routine) => ({
                     id: r.id,
                     title: r.title,
                     exercises: r.exercises.map((e) => ({
-                        id: crypto.randomUUID(), // UI id
-                        exerciseId: e.exerciseId, // DB id
+                        id: crypto.randomUUID(),
+                        exerciseId: e.exerciseId,
                         name: e.name,
                         sets: e.sets.map((s) => ({
                             id: crypto.randomUUID(),
@@ -49,10 +61,12 @@ export default function WorkoutPage() {
                 }));
 
                 setRoutines(formatted);
-                // console.log("Formatted Routines: ", formatted);
+                setCache("routines", formatted);
 
             } catch (err) {
                 console.error("Failed to fetch routines", err);
+            } finally {
+                setLoading(false);
             }
         };
 
@@ -148,13 +162,23 @@ export default function WorkoutPage() {
                         </button>
                     </div>
 
-                    {routines.length === 0 ? (
+                    {loading && routines.length === 0 ? (
+                        <div className="space-y-4">
+                            {[...Array(6)].map((_, i) => (
+                                <SkeletonRoutineCard key={i} />
+                            ))}
+                        </div>
+                    ) : routines.length === 0 ? (
                         <p className="text-gray-500 text-sm text-center py-4">
                             No routines yet.
                         </p>
                     ) : (
                         routines.map((routine) => (
-                            <RoutineCard key={routine.id} routine={routine} onDelete={handleDeleteRoutine} />
+                            <RoutineCard
+                                key={routine.id}
+                                routine={routine}
+                                onDelete={handleDeleteRoutine}
+                            />
                         ))
                     )}
                 </div>
