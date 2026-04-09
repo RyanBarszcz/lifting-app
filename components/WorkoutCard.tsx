@@ -110,7 +110,7 @@ export default function WorkoutCard({ workout }: { workout: WorkoutSummary }) {
             const exercises: RoutineExercise[] = fullWorkout.exercises.map((ex) => ({
                 id: crypto.randomUUID(),
                 exerciseId: ex.exerciseId,
-                title: ex.name,
+                name: ex.name,
                 sets: ex.sets.map((set) => ({
                     id: crypto.randomUUID(),
                     reps: set.reps,

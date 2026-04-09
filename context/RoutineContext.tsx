@@ -98,7 +98,7 @@ export const RoutineProvider = ({ children }: { children: React.ReactNode }) => 
         const builtExercises: RoutineExercise[] = exercises.map((ex) => ({
             id: crypto.randomUUID(),
             exerciseId: ex.exerciseId,
-            title: ex.title,
+            name: ex.name,
             sets: ex.sets.map((set) => ({
                 id: crypto.randomUUID(),
                 reps: set.reps,
