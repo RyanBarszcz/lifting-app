@@ -1,10 +1,11 @@
 import { createRoutine, deleteRoutine, getRoutines } from "@/lib/api/templates";
 import { getCache, invalidateCache, setCache } from "../cache";
+import { APIRoutine, Routine, RoutineExercise, RoutineSet, RoutineState } from "@/types";
 
-export async function saveRoutine(token: string, routine: any) {
+export async function saveRoutine(token: string, routine: RoutineState) {
   const payload = {
     title: routine.title,
-    exercises: routine.exercises.map((ex, index) => ({
+    exercises: routine.exercises.map((ex: RoutineExercise, index: number) => ({
       exerciseId: ex.exerciseId,
       orderIndex: index + 1,
       sets: ex.sets.map((set, i) => ({
@@ -23,14 +24,14 @@ export async function fetchRoutines(token: string) {
 
   const data = await getRoutines(token);
 
-  const formatted = data.map((r: any) => ({
+  const formatted = data.map((r: Routine) => ({
     id: r.id,
     title: r.title,
-    exercises: r.exercises.map((e: any) => ({
+    exercises: r.exercises.map((e) => ({
       id: crypto.randomUUID(),
       exerciseId: e.exerciseId,
       name: e.name,
-      sets: e.sets.map((s: any) => ({
+      sets: e.sets.map((s: RoutineSet) => ({
         id: crypto.randomUUID(),
         reps: s.reps,
       })),
