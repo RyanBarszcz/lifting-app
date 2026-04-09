@@ -4,7 +4,7 @@ import { useAuth, useUser } from "@clerk/nextjs";
 import WorkoutCard from "@/components/WorkoutCard";
 import { useEffect, useState } from "react";
 import SkeletonWorkoutCard from "@/components/SkeletonWorkoutCard";
-import { getCache, setCache } from "@/lib/cache";
+import { fetchWorkouts } from "@/lib/services/workoutService";
 
 export default function HomePage() {
     const { getToken, isLoaded } = useAuth();
@@ -14,42 +14,67 @@ export default function HomePage() {
     const [hasMore, setHasMore] = useState(true);
     const { user } = useUser();
 
-    const fetchWorkouts = async (pageNum = 1) => {
-        if (pageNum === 1) {
-            setLoading(true);
-        } else {
-            setLoading(true);
-        }
+    // const fetchWorkouts = async (pageNum = 1) => {
+    //     if (pageNum === 1) {
+    //         setLoading(true);
+    //     } else {
+    //         setLoading(true);
+    //     }
 
-        // await new Promise((res) => setTimeout(res, 2000));
+    //     // await new Promise((res) => setTimeout(res, 2000));
 
-        const cached = getCache("workouts");
+    //     const cached = getCache("workouts");
 
-        if (cached && pageNum === 1) {
-            setWorkouts(cached);
-            setLoading(false);
-        }
+    //     if (cached && pageNum === 1) {
+    //         setWorkouts(cached);
+    //         setLoading(false);
+    //     }
+
+    //     try {
+    //         const token = await getToken();
+
+    //         const res = await fetch(
+    //             `${process.env.NEXT_PUBLIC_API_URL}/sessions?page=${pageNum}&limit=10`,
+    //             {
+    //                 headers: {
+    //                     Authorization: `Bearer ${token}`,
+    //                 },
+    //             }
+    //         );
+
+    //         const data = await res.json();
+    //         // console.log("Workouts: ", data);
+
+    //         if (pageNum === 1) {
+    //             setWorkouts(data.sessions);
+    //             setCache("workouts", data.sessions);
+    //         } else {
+    //             setWorkouts((prev) => [...prev, ...data.sessions]);
+    //         }
+
+    //         setHasMore(data.hasMore);
+    //     } catch (err) {
+    //         console.error("Failed to fetch workouts", err);
+    //     } finally {
+    //         setLoading(false);
+    //     }
+    // };
+
+    const loadWorkouts = async (pageNum = 1) => {
+        setLoading(true);
 
         try {
             const token = await getToken();
+            if (!token) return;
 
-            const res = await fetch(
-                `${process.env.NEXT_PUBLIC_API_URL}/sessions?page=${pageNum}&limit=10`,
-                {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                }
-            );
+            // Load user's sessions
+            const data = await fetchWorkouts(token, pageNum);
 
-            const data = await res.json();
-            // console.log("Workouts: ", data);
-
+            // Session Pagination
             if (pageNum === 1) {
                 setWorkouts(data.sessions);
-                setCache("workouts", data.sessions);
             } else {
-                setWorkouts((prev) => [...prev, ...data.sessions]);
+                setWorkouts(prev => [...prev, ...data.sessions]);
             }
 
             setHasMore(data.hasMore);
@@ -58,11 +83,11 @@ export default function HomePage() {
         } finally {
             setLoading(false);
         }
-    };
+    }
 
     useEffect(() => {
         if (!isLoaded) return;
-        fetchWorkouts(1);
+        loadWorkouts(1);
     }, [isLoaded]);
 
     return (
@@ -101,7 +126,7 @@ export default function HomePage() {
                                 onClick={() => {
                                     const nextPage = page + 1;
                                     setPage(nextPage);
-                                    fetchWorkouts(nextPage);
+                                    loadWorkouts(nextPage);
                                 }}
                                 className="w-full py-3 bg-blue-600 rounded-xl text-white"
                             >

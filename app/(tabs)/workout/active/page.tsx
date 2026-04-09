@@ -7,6 +7,8 @@ import { useWorkout } from "@/context/WorkoutContext";
 import ExerciseCard from "@/components/ExerciseCard";
 import { useAuth } from "@clerk/nextjs";
 import { PreviousSet, WorkoutSet } from "@/types";
+import { getPreviousSets } from "@/lib/api/workout";
+import { deleteSession } from "@/lib/api/sessions";
 
 
 // Local Type
@@ -21,7 +23,7 @@ export default function ActiveWorkoutPage() {
     const router = useRouter();
     const { workout, resetWorkout, deleteExercise, updateWorkoutExercises } = useWorkout();
     const workoutExercises = workout.exercises;
-    const { getToken } = useAuth();
+    const { getToken, isLoaded } = useAuth();
 
     const [seconds, setSeconds] = useState(0);
     const [exercises, setExercises] = useState<UIExercise[]>([]);
@@ -73,6 +75,7 @@ export default function ActiveWorkoutPage() {
 
     // Initialize exercises from context
     useEffect(() => {
+        if (!isLoaded) return;
         if (!workoutExercises || workoutExercises.length === 0) {
             setExercises([]);
             return;
@@ -97,31 +100,30 @@ export default function ActiveWorkoutPage() {
 
 
         setExercises(formatted);
-    }, [workoutExercises]);
+    }, [workoutExercises, isLoaded]);
 
     // Fetch previous sets
     useEffect(() => {
         if (exercises.length === 0) return;
+        if (!isLoaded) return;
 
         const fetchPrevious = async () => {
-            const token = await getToken();
-            const ids = exercises.map(e => e.exerciseId).join(",");
 
-            const res = await fetch(
-                `${process.env.NEXT_PUBLIC_API_URL}/workout/previous?exerciseIds=${ids}`,
-                {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                }
-            );
+            try {
+                const token = await getToken();
+                if (!token) return;
 
-            const data = await res.json();
-            setPreviousMap(data);
+                const ids = exercises.map(e => e.exerciseId);
+
+                const data = await getPreviousSets(token, ids);
+                setPreviousMap(data);
+            } catch (err) {
+                console.error("Failed to fetch previous sets", err);
+            }
         };
 
         fetchPrevious();
-    }, [exercises]);
+    }, [exercises, isLoaded]);
 
     // Live timer
     useEffect(() => {
@@ -150,19 +152,14 @@ export default function ActiveWorkoutPage() {
     };
 
     const handleDiscardWorkout = async () => {
+        if (!isLoaded) return;
+
         try {
             const token = await getToken();
+            if (!token) return;
 
             if (workout.sessionId) {
-                await fetch(
-                    `${process.env.NEXT_PUBLIC_API_URL}/sessions/${workout.sessionId}/delete`,
-                    {
-                        method: "DELETE",
-                        headers: {
-                            Authorization: `Bearer ${token}`,
-                        },
-                    }
-                );
+                await deleteSession(token, workout.sessionId);
             }
 
             resetWorkout();

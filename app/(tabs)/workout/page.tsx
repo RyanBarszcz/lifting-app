@@ -8,61 +8,31 @@ import { useEffect, useState } from "react";
 import { Routine } from "@/types";
 import { getCache, setCache } from "@/lib/cache";
 import SkeletonRoutineCard from "@/components/SkeletonRoutineCard";
+import { fetchRoutines, removeRoutine } from "@/lib/services/routineService";
+import { startSession } from "@/lib/api/templates";
 
 
 export default function WorkoutPage() {
     const router = useRouter();
     const { startWorkout } = useWorkout();
-    const { getToken } = useAuth();
+    const { getToken, isLoaded } = useAuth();
     const [routines, setRoutines] = useState<Routine[]>([]);
     const [loading, setLoading] = useState(true);
 
 
+    // Get routines from DB
     useEffect(() => {
-        const fetchRoutines = async () => {
+        if (!isLoaded) return;
+
+        const load = async () => {
             setLoading(true);
-
-            // await new Promise((res) => setTimeout(res, 2000));
-
-
-            const cached = getCache("routines");
-
-            if (cached) {
-                setRoutines(cached);
-                setLoading(false);
-            }
 
             try {
                 const token = await getToken();
+                if (!token) return;
 
-                const res = await fetch(
-                    `${process.env.NEXT_PUBLIC_API_URL}/templates`,
-                    {
-                        headers: {
-                            Authorization: `Bearer ${token}`,
-                        },
-                    }
-                );
-
-                const data = await res.json();
-
-                const formatted: Routine[] = data.map((r: Routine) => ({
-                    id: r.id,
-                    title: r.title,
-                    exercises: r.exercises.map((e) => ({
-                        id: crypto.randomUUID(),
-                        exerciseId: e.exerciseId,
-                        name: e.name,
-                        sets: e.sets.map((s) => ({
-                            id: crypto.randomUUID(),
-                            reps: s.reps,
-                        })),
-                    })),
-                }));
-
-                setRoutines(formatted);
-                setCache("routines", formatted);
-
+                const data = await fetchRoutines(token);
+                setRoutines(data);
             } catch (err) {
                 console.error("Failed to fetch routines", err);
             } finally {
@@ -70,30 +40,17 @@ export default function WorkoutPage() {
             }
         };
 
-        fetchRoutines();
-    }, [getToken]);
+        load();
+    }, [isLoaded, getToken]);
 
     const handleDeleteRoutine = async (id: string) => {
         try {
             const token = await getToken();
+            if (!token) return;
 
-            const res = await fetch(
-                `${process.env.NEXT_PUBLIC_API_URL}/templates/${id}`,
-                {
-                    method: "DELETE",
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                }
-            );
+            await removeRoutine(token, id);
 
-            if (!res.ok) throw new Error("Failed to delete");
-
-            // console.log("Deleted routine: ", id);
-
-            // remove from UI immediately
             setRoutines((prev) => prev.filter((r) => r.id !== id));
-
         } catch (err) {
             console.error(err);
             alert("Failed to delete routine");
@@ -116,28 +73,13 @@ export default function WorkoutPage() {
                     onClick={async () => {
                         try {
                             const token = await getToken();
+                            if (!token) return;
 
-                            const res = await fetch(
-                                `${process.env.NEXT_PUBLIC_API_URL}/sessions/start`,
-                                {
-                                    method: "POST",
-                                    headers: {
-                                        "Content-Type": "application/json",
-                                        Authorization: `Bearer ${token}`,
-                                    },
-                                }
-                            );
+                            const data = await startSession(token);
 
-                            if (!res.ok) {
-                                throw new Error("Failed to start session");
-                            }
-
-                            const data = await res.json();
-
-                            // Save sessionId in context
                             startWorkout(data.id);
-
                             router.push("/workout/active");
+
                         } catch (error) {
                             console.error(error);
                             alert("Failed to start workout.");

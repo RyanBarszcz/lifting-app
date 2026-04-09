@@ -5,40 +5,35 @@ import { useRouter } from "next/navigation";
 import { Search } from "lucide-react";
 import { useWorkout } from "@/context/WorkoutContext";
 import { DBExercise } from "@/types";
-import { getCache, setCache } from "@/lib/cache";
+import { getCache } from "@/lib/cache";
 import SkeletonExerciseRow from "@/components/SkeletonExerciseRow";
+import { getExercises } from "@/lib/api/exercises";
 
 export default function AddExercisePage() {
     const router = useRouter();
     const { addExercises } = useWorkout();
-
+    const [adding, setAdding] = useState(false);
     const [search, setSearch] = useState("");
     const [selected, setSelected] = useState<DBExercise[]>([]);
-    const [exercises, setExercises] = useState<DBExercise[]>([]);
     const [loading, setLoading] = useState(true);
+    const [exercises, setExercises] = useState<DBExercise[]>(() => {
+        if (typeof window !== "undefined") {
+            return getCache("exercises") || [];
+        }
+        return [];
+    });
 
     // Get exercises from DB
     useEffect(() => {
         const fetchExercises = async () => {
             setLoading(true);
 
+            // Testing for skeleton
             // await new Promise((res) => setTimeout(res, 2000));
 
-            const cached = getCache("exercises");
-
-            if (cached) {
-                setExercises(cached);
-                setLoading(false);
-                // console.log("it was cached");
-            }
-
             try {
-                const res = await fetch(
-                    `${process.env.NEXT_PUBLIC_API_URL}/exercises`
-                );
-                const data = await res.json();
+                const data = await getExercises();
                 setExercises(data);
-                setCache("exercises", data);
             } catch (err) {
                 console.error("Failed to fetch exercises", err);
             } finally {
@@ -48,7 +43,6 @@ export default function AddExercisePage() {
 
         fetchExercises();
     }, []);
-
 
     const filteredExercises = useMemo(() => {
         return exercises
@@ -136,13 +130,19 @@ export default function AddExercisePage() {
             {selected.length > 0 && (
                 <div className="fixed bottom-16 left-0 right-0 p-6">
                     <button
-                        onClick={() => {
+                        // Prevent double clicking
+                        disabled={adding}
+                        onClick={async () => {
+                            setAdding(true);
+
                             addExercises(selected);
                             router.push("/workout/active");
 
                             // console.log(selected);
                         }}
-                        className="w-full bg-blue-500 text-white py-3 rounded-xl font-semibold"
+                        className={`w-fulltext-white py-3 rounded-xl font-semibold
+                            ${adding ? "bg-gray-500" : "bg-blue-500"
+                            }`}
                     >
                         Add {selected.length} Exercise
                         {selected.length > 1 ? "s" : ""}

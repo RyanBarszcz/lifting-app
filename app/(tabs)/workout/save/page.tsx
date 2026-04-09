@@ -1,23 +1,21 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect } from "react";
+import { useState } from "react";
 import { ChevronLeft } from "lucide-react";
 import { useWorkout } from "@/context/WorkoutContext";
 import { useAuth } from "@clerk/nextjs";
+import { finishWorkout } from "@/lib/services/workoutService";
 
 export default function SaveWorkoutPage() {
     const router = useRouter();
     const params = useSearchParams();
     const { workout, resetWorkout, updateWorkoutMeta } = useWorkout();
-    const { getToken } = useAuth();
+    const { getToken, isLoaded } = useAuth();
     const sessionId = params.get("sessionId");
     const title = workout.title;
     const notes = workout.notes;
-
-    useEffect(() => {
-        // console.log("Workout: ", workout);
-    }, []);
+    const [saving, setSaving] = useState(false);
 
     // Stats
     const totalStats = workout.exercises.reduce(
@@ -52,53 +50,25 @@ export default function SaveWorkoutPage() {
     };
 
     const handleSave = async () => {
+        if (!isLoaded) return;
+        if (saving) return;
 
         try {
+            setSaving(true);
+
             const token = await getToken();
+            if (!token || !sessionId) return;
 
-            const cleanedExercises = workout.exercises
-                .map(ex => ({
-                    exerciseId: ex.exerciseId,
-                    sets: ex.sets
-                        .filter(s => s.completed && s.weight > 0 && s.reps > 0)
-                        .map((s, i) => ({
-                            setNumber: i + 1,
-                            weight: s.weight,
-                            reps: s.reps,
-                        }))
-                }))
-                .filter(ex => ex.sets.length > 0);
-
-            if (cleanedExercises.length === 0) {
-                alert("Complete at least one set before saving.");
-                return;
-            }
-
-            await fetch(
-                `${process.env.NEXT_PUBLIC_API_URL}/sessions/${sessionId}/complete`,
-                {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${token}`,
-                    },
-                    body: JSON.stringify({
-                        exercises: cleanedExercises,
-                        endNote: notes.trim() || null,
-                        title: title.trim() || "Workout",
-                    }),
-                }
-            );
-
-            // console.log("Workout sent: ", workout);
+            await finishWorkout(token, sessionId, workout);
 
             router.push("/workout");
             resetWorkout();
 
-
-        } catch (err) {
+        } catch (err: any) {
             console.error(err);
-            alert("Failed to save workout");
+            alert(err.message || "Failed to save workout");
+        } finally {
+            setSaving(false);
         }
     };
 
@@ -119,10 +89,12 @@ export default function SaveWorkoutPage() {
                 <h1 className="font-semibold">Save Workout</h1>
 
                 <button
+                    disabled={saving}
                     onClick={handleSave}
-                    className="bg-blue-500 px-4 py-2 rounded-lg font-medium"
+                    className={`px-4 py-2 rounded-lg font-medium ${saving ? "bg-gray-500" : "bg-blue-500"
+                        }`}
                 >
-                    Save
+                    {saving ? "Saving..." : "Save"}
                 </button>
             </div>
 

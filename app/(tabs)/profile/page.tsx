@@ -3,49 +3,38 @@
 import { useAuth, useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { getCache, setCache } from "@/lib/cache";
 import { useClerk } from "@clerk/nextjs";
 import SkeletonProfileHeader from "@/components/SkeletonProfileHeader";
 import SkeletonStatCard from "@/components/SkeletonStatCard";
+import { getProfile } from "@/lib/api/profile";
+import { invalidateCachePrefix } from "@/lib/cache";
 
 
 export default function ProfilePage() {
     const [data, setData] = useState<any>(null);
-    const { getToken } = useAuth();
+    const [loading, setLoading] = useState(true);
+
+    const { getToken, isLoaded } = useAuth();
     const { user } = useUser();
     const router = useRouter();
-    const [loading, setLoading] = useState(true);
     const { signOut } = useClerk();
 
+    // Fetch profile data on load
     useEffect(() => {
+        if (!isLoaded) return;
+
         const fetchProfileData = async () => {
             setLoading(true);
 
+            // Test for loading skeleton
             // await new Promise((res) => setTimeout(res, 2000));
-
-
-            const cached = getCache("profile");
-
-            if (cached) {
-                setData(cached);
-                setLoading(false);
-            }
 
             try {
                 const token = await getToken();
+                if (!token) return;
 
-                const res = await fetch(
-                    `${process.env.NEXT_PUBLIC_API_URL}/profile`,
-                    {
-                        headers: {
-                            Authorization: `Bearer ${token}`,
-                        },
-                    }
-                );
-
-                const data = await res.json();
+                const data = await getProfile(token);
                 setData(data);
-                setCache("profile", data);
             } catch (err) {
                 console.error("Failed to fetch profile", err);
             } finally {
@@ -54,7 +43,7 @@ export default function ProfilePage() {
         }
 
         fetchProfileData();
-    }, []);
+    }, [isLoaded]);
 
     return (
         <div className="w-full text-white px-4">
@@ -65,7 +54,8 @@ export default function ProfilePage() {
 
                 <button
                     onClick={() => {
-                        localStorage.clear();
+                        // Clears app cache only
+                        invalidateCachePrefix("");
                         signOut();
                     }}
                     className="text-white font-semibold rounded-lg bg-red-700 py-2 px-4"

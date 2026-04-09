@@ -5,14 +5,17 @@ import { useRouter } from "next/navigation";
 import { Search } from "lucide-react";
 import { useRoutine } from "@/context/RoutineContext";
 import { DBExercise } from "@/types";
-import { getCache, setCache } from "@/lib/cache";
+import { getCache } from "@/lib/cache";
 import SkeletonExerciseRow from "@/components/SkeletonExerciseRow";
+import { getExercises } from "@/lib/api/exercises";
 
 export default function AddExercisePage() {
     const router = useRouter();
     const { addExercises } = useRoutine();
 
     const [search, setSearch] = useState("");
+    const [adding, setAdding] = useState(false);
+    const [loading, setLoading] = useState(true);
     const [selected, setSelected] = useState<DBExercise[]>([]);
     const [exercises, setExercises] = useState<DBExercise[]>(() => {
         if (typeof window !== "undefined") {
@@ -20,26 +23,14 @@ export default function AddExercisePage() {
         }
         return [];
     });
-    const [loading, setLoading] = useState(true);
 
     // Get exercises from DB
     useEffect(() => {
         const fetchExercises = async () => {
             setLoading(true);
 
-            const cached = getCache("exercises");
-
-            if (cached) {
-                setExercises(cached);
-                setLoading(false);
-            }
-
             try {
-                const res = await fetch(
-                    `${process.env.NEXT_PUBLIC_API_URL}/exercises`
-                );
-                const data = await res.json();
-                setCache("exercises", data);
+                const data = await getExercises();
                 setExercises(data);
             } catch (err) {
                 console.error("Failed to fetch exercises", err);
@@ -138,7 +129,9 @@ export default function AddExercisePage() {
             {selected.length > 0 && (
                 <div className="fixed bottom-16 left-0 right-0 p-6">
                     <button
+                        disabled={adding}
                         onClick={() => {
+                            setAdding(true);
                             addExercises(selected);
                             router.push("/workout/routines/create");
 

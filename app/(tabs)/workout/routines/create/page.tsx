@@ -5,10 +5,13 @@ import RoutineExerciseCard from "@/components/RoutineExerciseCard";
 import { useRoutine } from "@/context/RoutineContext";
 import { useAuth } from "@clerk/nextjs";
 import { toast } from "sonner";
+import { saveRoutine } from "@/lib/services/routineService";
+import { useState } from "react";
 
 export default function CreateRoutinePage() {
     const router = useRouter();
-    const { getToken } = useAuth();
+    const { getToken, isLoaded } = useAuth();
+    const [saving, setSaving] = useState(false);
 
     const {
         routine,
@@ -20,8 +23,9 @@ export default function CreateRoutinePage() {
 
     // TODO: Possibly add a loading spinner on the save button
     const handleSaveRoutine = async () => {
+        if (!isLoaded) return;
+        if (saving) return; // prevent double click
         try {
-            // Validation
             if (!routine.title.trim()) {
                 toast.error("Please enter a routine title");
                 return;
@@ -32,47 +36,20 @@ export default function CreateRoutinePage() {
                 return;
             }
 
-            // Format payload
-            const payload = {
-                title: routine.title,
-                exercises: routine.exercises.map((ex, index) => ({
-                    exerciseId: ex.exerciseId,
-                    orderIndex: index + 1,
-                    sets: ex.sets.map((set, i) => ({
-                        setNumber: i + 1,
-                        reps: set.reps,
-                    })),
-                })),
-            };
+            setSaving(true);
 
-            // Auth
             const token = await getToken();
+            if (!token) return;
 
-            // API call
-            const res = await fetch(
-                `${process.env.NEXT_PUBLIC_API_URL}/templates/create`,
-                {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${token}`,
-                    },
-                    body: JSON.stringify(payload),
-                }
-            );
+            await saveRoutine(token, routine);
 
-            if (!res.ok) {
-                const err = await res.json();
-                throw new Error(err.error || "Failed to save routine");
-            }
-
-            // Success
             resetRoutine();
             router.push("/workout");
-            // console.log("Routine saved:", payload);
+
             toast.success("Routine saved!", {
                 description: "Ready to use in your workouts",
             });
+
         } catch (err) {
             console.error(err);
             toast.error("Failed to save routine");
@@ -95,9 +72,12 @@ export default function CreateRoutinePage() {
                 <h1 className="font-semibold">Create Routine</h1>
 
                 <button
+                    disabled={saving}
                     onClick={handleSaveRoutine}
-                    className="bg-blue-500 rounded-lg py-2 px-4 text-white font-semibold">
-                    Save
+                    className={`rounded-lg py-2 px-4 text-white font-semibold ${saving ? "bg-gray-500" : "bg-blue-500"
+                        }`}
+                >
+                    {saving ? "Saving..." : "Save"}
                 </button>
             </div>
 

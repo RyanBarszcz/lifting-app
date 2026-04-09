@@ -5,12 +5,14 @@ import { ArrowLeft, MoreVertical } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useAuth } from "@clerk/nextjs";
 import ExerciseHistoryCard from "@/components/ExerciseHistoryCard";
+import { getWorkoutById } from "@/lib/api/workouts";
+import { deleteSession } from "@/lib/api/sessions";
 
 export default function WorkoutDetailsPage() {
     const router = useRouter();
     const params = useParams();
     const id = params.id as string;
-    const { getToken } = useAuth();
+    const { getToken, isLoaded } = useAuth();
 
     const [workout, setWorkout] = useState<any>(null);
     const [showOptionsModal, setShowOptionsModal] = useState(false);
@@ -19,46 +21,31 @@ export default function WorkoutDetailsPage() {
 
     // Get workout
     useEffect(() => {
-        const fetchWorkout = async () => {
-            const token = await getToken();
-            const res = await fetch(
-                `${process.env.NEXT_PUBLIC_API_URL}/workout/${id}`,
-                {
-                    headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${token}`,
-                    }
-                },
+        if (!isLoaded) return;
 
-            );
-            const data = await res.json();
-            // console.log(`Id workout: ${id}`);
-            // console.log("Data: ", data);
-            setWorkout(data);
+        const fetchWorkout = async () => {
+            try {
+                const token = await getToken();
+                if (!token) return;
+
+                const data = await getWorkoutById(token, id);
+                setWorkout(data);
+            } catch (err) {
+                console.error("Failed to fetch workout", err);
+            }
         };
 
         fetchWorkout();
-    }, [id]);
+    }, [isLoaded, id]);
 
     const deleteWorkout = async () => {
         try {
             const token = await getToken();
+            if (!token) return;
 
-            const res = await fetch(
-                `${process.env.NEXT_PUBLIC_API_URL}/sessions/${id}/delete`,
-                {
-                    method: "DELETE",
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                }
-            );
+            await deleteSession(token, id);
 
-            if (!res.ok) {
-                throw new Error("Failed to delete workout");
-            }
-
-            // Notification
+            // Notifications
             setShowDeleteConfirm(false);
             setShowToast(true);
 
@@ -72,7 +59,13 @@ export default function WorkoutDetailsPage() {
         }
     };
 
-    if (!workout) return null;
+    if (!workout) {
+        return (
+            <div className="text-white text-center mt-10">
+                Loading...
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-black text-white px-6 py-6">

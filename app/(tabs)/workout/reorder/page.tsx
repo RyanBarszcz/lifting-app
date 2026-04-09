@@ -20,7 +20,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { GripVertical } from "lucide-react";
 import { useWorkout } from "@/context/WorkoutContext";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { WorkoutExercise } from "@/types";
 
 
@@ -67,7 +67,7 @@ export default function ReorderPage() {
     const { workout, reorderExercises } = useWorkout();
     const [dragging, setDragging] = useState(false);
 
-    const exercises = workout.exercises;
+    const exercises = useMemo(() => workout.exercises || [], [workout.exercises]);
 
     // Sensors for proper desktop + mobile behavior
     const sensors = useSensors(
@@ -97,6 +97,8 @@ export default function ReorderPage() {
 
         const oldIndex = exercises.findIndex((e) => e.id === active.id);
         const newIndex = exercises.findIndex((e) => e.id === over.id);
+
+        if (oldIndex === -1 || newIndex === -1) return;
 
         const newOrder = arrayMove(exercises, oldIndex, newIndex);
         reorderExercises(newOrder);

@@ -4,35 +4,46 @@ import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Search } from "lucide-react";
 import { DBExercise } from "@/types";
-import { getCache, setCache } from "@/lib/cache";
+import { getExercises } from "@/lib/api/exercises";
 
 export default function ExercisesPage() {
     const router = useRouter();
 
     const [search, setSearch] = useState("");
-    const [exercises, setExercises] = useState<DBExercise[]>(() => {
-        if (typeof window !== "undefined") {
-            return getCache("exercises") || [];
-        }
-        return [];
-    });
+    const [exercises, setExercises] = useState<DBExercise[]>([]);
     const [loading, setLoading] = useState(true);
 
     // Fetch exercises
+    // useEffect(() => {
+    //     const fetchExercises = async () => {
+    //         if (exercises.length > 0) {
+    //             setLoading(false);
+    //             return;
+    //         }
+
+    //         try {
+    //             const res = await fetch(
+    //                 `${process.env.NEXT_PUBLIC_API_URL}/exercises`
+    //             );
+    //             const data = await res.json();
+    //             setExercises(data);
+    //             setCache("exercises", data);
+    //         } catch (err) {
+    //             console.error("Failed to fetch exercises", err);
+    //         } finally {
+    //             setLoading(false);
+    //         }
+    //     };
+
+    //     fetchExercises();
+    // }, []);
+
+    // Get exercises on page load
     useEffect(() => {
         const fetchExercises = async () => {
-            if (exercises.length > 0) {
-                setLoading(false);
-                return;
-            }
-
             try {
-                const res = await fetch(
-                    `${process.env.NEXT_PUBLIC_API_URL}/exercises`
-                );
-                const data = await res.json();
+                const data = await getExercises();
                 setExercises(data);
-                setCache("exercises", data);
             } catch (err) {
                 console.error("Failed to fetch exercises", err);
             } finally {

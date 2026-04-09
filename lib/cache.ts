@@ -1,5 +1,3 @@
-import { time } from "console";
-import { parse } from "path";
 
 const CACHE_TTL = 1000 * 60 * 5; // 5 min
 
@@ -26,4 +24,17 @@ export function setCache(key: string, data: any){
             timestamp: Date.now(),
         })
     )
+}
+
+export function invalidateCachePrefix(prefix: string) {
+    for (let i = localStorage.length - 1; i >= 0; i--) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith(prefix)) {
+            localStorage.removeItem(key);
+        }
+    }
+}
+
+export function invalidateCache(key: string) {
+    localStorage.removeItem(key);
 }
