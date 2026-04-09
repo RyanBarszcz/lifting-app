@@ -67,7 +67,6 @@ export interface WorkoutExercise {
 export interface WorkoutState {
     sessionId: string | null;
     startedAt: number | null;
-    completedAt: number | null;
     exercises: WorkoutExercise[];
     templateName?: string | null;
     title: string;
