@@ -1,4 +1,6 @@
-export function cleanExercises(exercises: any[]) {
+import { WorkoutExercise } from "@/types";
+
+export function cleanExercises(exercises: WorkoutExercise[]) {
   return exercises
     .map(ex => ({
       exerciseId: ex.exerciseId,
