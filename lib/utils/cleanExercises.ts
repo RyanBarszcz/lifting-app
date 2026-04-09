@@ -5,7 +5,7 @@ export function cleanExercises(exercises: WorkoutExercise[]) {
     .map(ex => ({
       exerciseId: ex.exerciseId,
       sets: ex.sets
-        .filter(s => s.completed && s.weight > 0 && s.reps > 0)
+        .filter(s => s.completed && s.weight !== null && s.weight > 0 && s.reps > 0)
         .map((s, i) => ({
           setNumber: i + 1,
           weight: s.weight,
