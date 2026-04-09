@@ -7,6 +7,8 @@ import { useAuth } from "@clerk/nextjs";
 import ExerciseHistoryCard from "@/components/ExerciseHistoryCard";
 import { getWorkoutById } from "@/lib/api/workouts";
 import { deleteSession } from "@/lib/api/sessions";
+import { handleError } from "@/lib/utils/handleError";
+import { toast } from "sonner";
 
 export default function WorkoutDetailsPage() {
     const router = useRouter();
@@ -31,7 +33,7 @@ export default function WorkoutDetailsPage() {
                 const data = await getWorkoutById(token, id);
                 setWorkout(data);
             } catch (err) {
-                console.error("Failed to fetch workout", err);
+                toast.error(handleError(err));
             }
         };
 
@@ -54,8 +56,7 @@ export default function WorkoutDetailsPage() {
             }, 1200);
 
         } catch (err) {
-            console.error(err);
-            alert("Failed to delete workout");
+            toast.error(handleError(err));
         }
     };
 

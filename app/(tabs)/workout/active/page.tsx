@@ -9,6 +9,8 @@ import { useAuth } from "@clerk/nextjs";
 import { PreviousSet, WorkoutSet } from "@/types";
 import { getPreviousSets } from "@/lib/api/workout";
 import { deleteSession } from "@/lib/api/sessions";
+import { handleError } from "@/lib/utils/handleError";
+import { toast } from "sonner";
 
 
 // Local Type
@@ -118,7 +120,7 @@ export default function ActiveWorkoutPage() {
                 const data = await getPreviousSets(token, ids);
                 setPreviousMap(data);
             } catch (err) {
-                console.error("Failed to fetch previous sets", err);
+                toast.error(handleError(err));
             }
         };
 
@@ -166,8 +168,7 @@ export default function ActiveWorkoutPage() {
             router.push("/workout");
 
         } catch (err) {
-            console.error(err);
-            alert("Failed to discard workout");
+            toast.error(handleError(err));
         }
     };
 

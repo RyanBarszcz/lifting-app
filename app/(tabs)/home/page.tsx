@@ -5,6 +5,8 @@ import WorkoutCard from "@/components/WorkoutCard";
 import { useEffect, useState } from "react";
 import SkeletonWorkoutCard from "@/components/SkeletonWorkoutCard";
 import { fetchWorkouts } from "@/lib/services/workoutService";
+import { handleError } from "@/lib/utils/handleError";
+import { toast } from "sonner";
 
 export default function HomePage() {
     const { getToken, isLoaded } = useAuth();
@@ -79,7 +81,7 @@ export default function HomePage() {
 
             setHasMore(data.hasMore);
         } catch (err) {
-            console.error("Failed to fetch workouts", err);
+            toast.error(handleError(err));
         } finally {
             setLoading(false);
         }

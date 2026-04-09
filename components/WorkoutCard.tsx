@@ -7,6 +7,8 @@ import { useState, useEffect, useRef } from 'react';
 import { useWorkout } from '@/context/WorkoutContext';
 import { useAuth } from '@clerk/nextjs';
 import { useRoutine } from '@/context/RoutineContext';
+import { handleError } from '@/lib/utils/handleError';
+import { toast } from 'sonner';
 
 
 export default function WorkoutCard({ workout }: { workout: WorkoutSummary }) {
@@ -79,8 +81,7 @@ export default function WorkoutCard({ workout }: { workout: WorkoutSummary }) {
             router.push("/workout/active");
 
         } catch (err) {
-            console.error(err);
-            alert("Failed to copy workout");
+            toast.error(handleError(err));
         }
     };
 
@@ -128,8 +129,7 @@ export default function WorkoutCard({ workout }: { workout: WorkoutSummary }) {
             router.push("/workout/routines/create");
 
         } catch (err) {
-            console.error(err);
-            alert("Failed to create routine");
+            toast.error(handleError(err));
         }
     };
 
@@ -162,8 +162,7 @@ export default function WorkoutCard({ workout }: { workout: WorkoutSummary }) {
             window.location.reload();
 
         } catch (err) {
-            console.error(err);
-            alert("Failed to delete workout");
+            toast.error(handleError(err));
         }
     };
 

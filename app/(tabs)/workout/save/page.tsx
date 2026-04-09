@@ -6,6 +6,8 @@ import { ChevronLeft } from "lucide-react";
 import { useWorkout } from "@/context/WorkoutContext";
 import { useAuth } from "@clerk/nextjs";
 import { finishWorkout } from "@/lib/services/workoutService";
+import { handleError } from "@/lib/utils/handleError";
+import { toast } from "sonner";
 
 export default function SaveWorkoutPage() {
     const router = useRouter();
@@ -64,9 +66,8 @@ export default function SaveWorkoutPage() {
             router.push("/workout");
             resetWorkout();
 
-        } catch (err: any) {
-            console.error(err);
-            alert(err.message || "Failed to save workout");
+        } catch (err) {
+            toast.error(handleError(err));
         } finally {
             setSaving(false);
         }

@@ -8,6 +8,8 @@ import SkeletonProfileHeader from "@/components/SkeletonProfileHeader";
 import SkeletonStatCard from "@/components/SkeletonStatCard";
 import { getProfile } from "@/lib/api/profile";
 import { invalidateCachePrefix } from "@/lib/cache";
+import { handleError } from "@/lib/utils/handleError";
+import { toast } from "sonner";
 
 
 export default function ProfilePage() {
@@ -36,7 +38,7 @@ export default function ProfilePage() {
                 const data = await getProfile(token);
                 setData(data);
             } catch (err) {
-                console.error("Failed to fetch profile", err);
+                toast.error(handleError(err));
             } finally {
                 setLoading(false);
             }

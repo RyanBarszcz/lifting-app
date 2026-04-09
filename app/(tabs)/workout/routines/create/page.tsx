@@ -7,6 +7,7 @@ import { useAuth } from "@clerk/nextjs";
 import { toast } from "sonner";
 import { saveRoutine } from "@/lib/services/routineService";
 import { useState } from "react";
+import { handleError } from "@/lib/utils/handleError";
 
 export default function CreateRoutinePage() {
     const router = useRouter();
@@ -51,8 +52,7 @@ export default function CreateRoutinePage() {
             });
 
         } catch (err) {
-            console.error(err);
-            toast.error("Failed to save routine");
+            toast.error(handleError(err));
         }
     };
 

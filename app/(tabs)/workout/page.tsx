@@ -10,6 +10,8 @@ import { getCache, setCache } from "@/lib/cache";
 import SkeletonRoutineCard from "@/components/SkeletonRoutineCard";
 import { fetchRoutines, removeRoutine } from "@/lib/services/routineService";
 import { startSession } from "@/lib/api/templates";
+import { handleError } from "@/lib/utils/handleError";
+import { toast } from "sonner";
 
 
 export default function WorkoutPage() {
@@ -34,7 +36,7 @@ export default function WorkoutPage() {
                 const data = await fetchRoutines(token);
                 setRoutines(data);
             } catch (err) {
-                console.error("Failed to fetch routines", err);
+                toast.error(handleError(err));
             } finally {
                 setLoading(false);
             }
@@ -52,8 +54,7 @@ export default function WorkoutPage() {
 
             setRoutines((prev) => prev.filter((r) => r.id !== id));
         } catch (err) {
-            console.error(err);
-            alert("Failed to delete routine");
+            toast.error(handleError(err));
         }
     };
 
@@ -80,9 +81,8 @@ export default function WorkoutPage() {
                             startWorkout(data.id);
                             router.push("/workout/active");
 
-                        } catch (error) {
-                            console.error(error);
-                            alert("Failed to start workout.");
+                        } catch (err) {
+                            toast.error(handleError(err));
                         }
                     }}
                     className="w-full bg-white text-black py-3 rounded-xl font-medium"

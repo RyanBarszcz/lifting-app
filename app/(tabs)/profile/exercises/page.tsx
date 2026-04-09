@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { Search } from "lucide-react";
 import { DBExercise } from "@/types";
 import { getExercises } from "@/lib/api/exercises";
+import { handleError } from "@/lib/utils/handleError";
+import { toast } from "sonner";
 
 export default function ExercisesPage() {
     const router = useRouter();
@@ -45,7 +47,7 @@ export default function ExercisesPage() {
                 const data = await getExercises();
                 setExercises(data);
             } catch (err) {
-                console.error("Failed to fetch exercises", err);
+                toast.error(handleError(err));
             } finally {
                 setLoading(false);
             }

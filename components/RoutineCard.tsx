@@ -6,6 +6,8 @@ import { useWorkout } from "@/context/WorkoutContext";
 import { useState } from "react";
 import { useAuth } from "@clerk/nextjs";
 import { Routine } from "@/types";
+import { handleError } from "@/lib/utils/handleError";
+import { toast } from "sonner";
 
 
 export default function RoutineCard({ routine, onDelete }: { routine: Routine; onDelete: (id: string) => void; }) {
@@ -60,8 +62,7 @@ export default function RoutineCard({ routine, onDelete }: { routine: Routine; o
             router.push("/workout/active");
 
         } catch (err) {
-            console.error(err);
-            alert("Failed to start workout");
+            toast.error(handleError(err));
         }
     };
 
