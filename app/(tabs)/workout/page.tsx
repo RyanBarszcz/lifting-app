@@ -6,7 +6,6 @@ import { useWorkout } from "@/context/WorkoutContext";
 import { useAuth } from "@clerk/nextjs";
 import { useEffect, useState } from "react";
 import { Routine } from "@/types";
-import { getCache, setCache } from "@/lib/cache";
 import SkeletonRoutineCard from "@/components/SkeletonRoutineCard";
 import { fetchRoutines, removeRoutine } from "@/lib/services/routineService";
 import { startSession } from "@/lib/api/templates";
