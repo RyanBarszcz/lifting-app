@@ -7,6 +7,7 @@ import SkeletonWorkoutCard from "@/components/SkeletonWorkoutCard";
 import { fetchWorkouts } from "@/lib/services/workoutService";
 import { handleError } from "@/lib/utils/handleError";
 import { toast } from "sonner";
+import { WorkoutState } from "@/types";
 
 export default function HomePage() {
     const { getToken, isLoaded } = useAuth();
