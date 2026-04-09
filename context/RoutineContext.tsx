@@ -50,7 +50,7 @@ export const RoutineProvider = ({ children }: { children: React.ReactNode }) => 
                 .map(e => ({
                     id: crypto.randomUUID(),
                     exerciseId: e.id,
-                    title: e.name,
+                    name: e.name,
                     sets: [
                         {
                             id: crypto.randomUUID(),

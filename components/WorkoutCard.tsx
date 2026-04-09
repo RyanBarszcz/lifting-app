@@ -1,6 +1,6 @@
 "use client";
 
-import { Award, MoreHorizontal } from 'lucide-react';
+import { MoreHorizontal } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { RoutineExercise, WorkoutDetail, WorkoutExercise, WorkoutSummary } from '@/types';
 import { useState, useEffect, useRef } from 'react';
