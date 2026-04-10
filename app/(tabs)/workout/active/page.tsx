@@ -104,19 +104,22 @@ export default function ActiveWorkoutPage() {
         setExercises(formatted);
     }, [workoutExercises, isLoaded]);
 
+    const exerciseIds = exercises
+        .map(e => e.exerciseId)
+        .sort()
+        .join(",");
+
     // Fetch previous sets
     useEffect(() => {
-        if (exercises.length === 0) return;
+        if (!exerciseIds) return;
         if (!isLoaded) return;
 
         const fetchPrevious = async () => {
-
             try {
                 const token = await getToken();
                 if (!token) return;
 
                 const ids = exercises.map(e => e.exerciseId);
-
                 const data = await getPreviousSets(token, ids);
                 setPreviousMap(data);
             } catch (err) {
@@ -125,7 +128,7 @@ export default function ActiveWorkoutPage() {
         };
 
         fetchPrevious();
-    }, [exercises, isLoaded]);
+    }, [exerciseIds, isLoaded]);
 
     // Live timer
     useEffect(() => {
