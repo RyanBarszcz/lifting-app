@@ -11,6 +11,7 @@ import { fetchRoutines, removeRoutine } from "@/lib/services/routineService";
 import { startSession } from "@/lib/api/templates";
 import { handleError } from "@/lib/utils/handleError";
 import { toast } from "sonner";
+import { getCache, setCache } from "@/lib/cache";
 
 
 export default function WorkoutPage() {
@@ -50,6 +51,13 @@ export default function WorkoutPage() {
             if (!token) return;
 
             await removeRoutine(token, id);
+
+            const existing = getCache("routines") || [];
+
+            setCache(
+                "routines",
+                existing.filter((r: any) => r.id !== id)
+            );
 
             setRoutines((prev) => prev.filter((r) => r.id !== id));
         } catch (err) {

@@ -9,6 +9,7 @@ import { useAuth } from '@clerk/nextjs';
 import { useRoutine } from '@/context/RoutineContext';
 import { handleError } from '@/lib/utils/handleError';
 import { toast } from 'sonner';
+import { getCache, setCache } from '@/lib/cache';
 
 
 export default function WorkoutCard({ workout }: { workout: WorkoutSummary }) {
@@ -159,7 +160,18 @@ export default function WorkoutCard({ workout }: { workout: WorkoutSummary }) {
             setShowDeleteModal(false);
 
             // quick refresh (fine for now)
-            window.location.reload();
+            // window.location.reload();
+
+            const existing = getCache("workouts") || [];
+
+            setCache(
+                "workouts",
+                existing.filter((w: any) => w.id !== workout.id)
+            );
+
+            // Invalidate cache
+            setCache("previousWorkouts", null);
+            setCache("exerciseMetrics", null);
 
         } catch (err) {
             toast.error(handleError(err));

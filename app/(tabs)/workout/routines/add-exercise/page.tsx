@@ -129,7 +129,7 @@ export default function AddExercisePage() {
 
             {/* Bottom Add Button */}
             {selected.length > 0 && (
-                <div className="fixed bottom-16 left-0 right-0 p-6">
+                <div className="fixed bottom-20 left-0 right-0 flex justify-center px-6 z-40">
                     <button
                         disabled={adding}
                         onClick={() => {
@@ -139,8 +139,20 @@ export default function AddExercisePage() {
 
                             // console.log(selected);
                         }}
-                        className="w-full bg-blue-500 text-white py-3 rounded-xl font-semibold"
-                    >
+                        className={`
+            w-full max-w-md
+            text-white
+            py-3
+            rounded-xl
+            font-semibold
+            shadow-[0_4px_20px_rgba(0,0,0,0.4)]
+            transition-all duration-200
+
+            ${adding
+                                ? "bg-gray-600 opacity-70"
+                                : "bg-blue-500 active:scale-[0.97] active:bg-blue-600"
+                            }
+        `}>
                         Add {selected.length} Exercise
                         {selected.length > 1 ? "s" : ""}
                     </button>

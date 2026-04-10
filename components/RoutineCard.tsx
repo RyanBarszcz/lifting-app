@@ -23,6 +23,7 @@ export default function RoutineCard({ routine, onDelete }: { routine: Routine; o
     const handleStartRoutine = async () => {
         try {
             const token = await getToken();
+            if (!token) return;
 
             const res = await fetch(
                 `${process.env.NEXT_PUBLIC_API_URL}/sessions/start`,

@@ -8,6 +8,7 @@ import { useAuth } from "@clerk/nextjs";
 import { finishWorkout } from "@/lib/services/workoutService";
 import { handleError } from "@/lib/utils/handleError";
 import { toast } from "sonner";
+import { setCache } from "@/lib/cache";
 
 export default function SaveWorkoutContent() {
     const router = useRouter();
@@ -62,6 +63,11 @@ export default function SaveWorkoutContent() {
             if (!token || !sessionId) return;
 
             await finishWorkout(token, sessionId, workout);
+
+            // Invalidate cache
+            setCache("workouts", null);
+            setCache("previousWorkouts", null);
+            setCache("exerciseMetrics", null);
 
             router.push("/workout");
             resetWorkout();

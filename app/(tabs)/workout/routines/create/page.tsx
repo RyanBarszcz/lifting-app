@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { saveRoutine } from "@/lib/services/routineService";
 import { useState } from "react";
 import { handleError } from "@/lib/utils/handleError";
+import { getCache, setCache } from "@/lib/cache";
 
 export default function CreateRoutinePage() {
     const router = useRouter();
@@ -42,7 +43,11 @@ export default function CreateRoutinePage() {
             const token = await getToken();
             if (!token) return;
 
-            await saveRoutine(token, routine);
+            const newRoutine = await saveRoutine(token, routine);
+
+            // Cache update
+            const existing = getCache("routines") || [];
+            setCache("routines", [newRoutine, ...existing]);
 
             resetRoutine();
             router.push("/workout");
