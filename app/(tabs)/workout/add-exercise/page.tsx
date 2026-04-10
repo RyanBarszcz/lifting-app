@@ -142,7 +142,7 @@ export default function AddExercisePage() {
 
                             // console.log(selected);
                         }}
-                        className={`w-fulltext-white py-3 rounded-xl font-semibold
+                        className={`w-full text-white py-3 rounded-xl font-semibold
                             ${adding ? "bg-gray-500" : "bg-blue-500"
                             }`}
                     >
