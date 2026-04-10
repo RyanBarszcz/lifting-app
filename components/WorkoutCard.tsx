@@ -28,6 +28,7 @@ export default function WorkoutCard({ workout }: { workout: WorkoutSummary }) {
     const visibleExercises = workout.exercises.slice(0, 3);
     const remaining = workout.exercises.length - 3;
 
+    // Clicking off
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (
